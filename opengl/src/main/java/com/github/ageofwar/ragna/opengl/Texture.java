@@ -1,6 +1,5 @@
 package com.github.ageofwar.ragna.opengl;
 
-import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 
 import java.io.IOException;

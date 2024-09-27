@@ -1,7 +1,5 @@
 package com.github.ageofwar.ragna.opengl;
 
-import org.joml.Matrix4f;
-
 import static org.lwjgl.opengl.GL30.*;
 
 public record GlShaderProgram(int id) implements AutoCloseable {

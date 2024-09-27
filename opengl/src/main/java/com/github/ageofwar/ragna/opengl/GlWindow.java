@@ -18,8 +18,8 @@ import static org.lwjgl.opengl.GL30.*;
 public class GlWindow implements Window {
     private final long id;
     private final GlRenderContext context;
+    private final List<ResizeCallback> resizeCallbacks;
     private Scene scene;
-    private List<ResizeCallback> resizeCallbacks;
 
     public GlWindow(long id, Engine engine, Scene scene) {
         this.id = id;

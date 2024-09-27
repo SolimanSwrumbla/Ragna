@@ -3,10 +3,10 @@ package com.github.ageofwar.ragna;
 import java.util.Objects;
 
 public final class Color {
-    private float red;
-    private float green;
-    private float blue;
-    private float alpha;
+    private final float red;
+    private final float green;
+    private final float blue;
+    private final float alpha;
 
     public static final Color WHITE = rgb(1, 1, 1);
     public static final Color BLACK = rgb(0, 0, 0);
