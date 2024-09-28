@@ -1,7 +1,7 @@
 package com.github.ageofwar.ragna.opengl;
 
-import com.github.ageofwar.ragna.RenderContext;
 import com.github.ageofwar.ragna.Scene;
+import com.github.ageofwar.ragna.Window;
 
 public class FrameLimiterScene implements Scene {
     private final Scene scene;
@@ -28,15 +28,15 @@ public class FrameLimiterScene implements Scene {
     }
 
     @Override
-    public void init(RenderContext context) {
+    public void init(Window window) {
         nextRenderTime = 0;
-        scene.init(context);
+        scene.init(window);
     }
 
     @Override
-    public void render(RenderContext context) {
-        if (minFrameTime == 0 || context.isWindowResizing()) {
-            scene.render(context);
+    public void render(Window window) {
+        if (minFrameTime == 0 || window.isResizing()) {
+            scene.render(window);
             return;
         }
 
@@ -44,12 +44,12 @@ public class FrameLimiterScene implements Scene {
         if (currentTime < nextRenderTime) {
             return;
         }
-        scene.render(context);
+        scene.render(window);
         nextRenderTime = currentTime + minFrameTime;
     }
 
     @Override
-    public void close() {
-        scene.close();
+    public void close(Window window) {
+        scene.close(window);
     }
 }

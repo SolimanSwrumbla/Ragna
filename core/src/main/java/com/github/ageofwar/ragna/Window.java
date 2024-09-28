@@ -4,13 +4,10 @@ public interface Window {
     void close();
     Size viewportSize();
     float aspectRatio();
-    Callback onResize(ResizeCallback callback);
+    boolean isResizing();
+    Engine engine();
+    void requestRendering();
 
     record Size(int width, int height) {
-    }
-
-    @FunctionalInterface
-    interface ResizeCallback {
-        void onResize(int width, int height);
     }
 }

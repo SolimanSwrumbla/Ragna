@@ -1,7 +1,7 @@
 package com.github.ageofwar.ragna.opengl;
 
-import com.github.ageofwar.ragna.RenderContext;
 import com.github.ageofwar.ragna.Scene;
+import com.github.ageofwar.ragna.Window;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -13,17 +13,17 @@ public class VSyncScene implements Scene {
     }
 
     @Override
-    public void init(RenderContext context) {
+    public void init(Window window) {
         glfwSwapInterval(1);
     }
 
     @Override
-    public void render(RenderContext context) {
-        scene.render(context);
+    public void render(Window window) {
+        scene.render(window);
     }
 
     @Override
-    public void close() {
+    public void close(Window window) {
         glfwSwapInterval(0);
     }
 }
