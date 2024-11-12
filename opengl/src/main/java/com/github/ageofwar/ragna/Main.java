@@ -9,20 +9,9 @@ public class Main {
         var mainThread = Thread.currentThread();
         var windowConfiguration = new WindowConfiguration("Hello World!", 800, 800);
         try (var engine = GlEngine.create()) {
-            var model1 = new Model(new Mesh(new float[]{
-                    -0.6f, 0.4f, 0.5f,
-                    -0.6f, -0.6f, 0.5f,
-                    0.4f, -0.6f, 0.5f,
-                    0.4f, 0.4f, 0.5f,
-            }, new int[]{0, 1, 3, 3, 1, 2}), new Material.Fill(Color.rgba(1.0f, 0.0f, 0.0f, 0.5f)));
-            var model2 = new Model(new Mesh(new float[]{
-                    -0.4f, 0.6f, -0.5f,
-                    -0.4f, -0.4f, -0.5f,
-                    0.6f, -0.4f, -0.5f,
-                    0.6f, 0.6f, -0.5f,
-            }, new int[]{0, 1, 3, 3, 1, 2}), new Material.Fill(Color.rgba(0.0f, 1.0f, 0.0f, 0.5f)));
-            var camera = new Camera(new Position(0, 0, 0), new Rotation(0, 0, 0), new PerspectiveProjection((float) Math.toRadians(90), 0.01f, 1000f));
-            var scene = new Gl3DScene(camera, model2, model1);
+            var cube = ObjLoader.loadResource("cube.obj", "cube.png");
+            var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.01f, 1000f));
+            var scene = new Gl3DScene(camera, cube);
             engine.createWindow(windowConfiguration, scene);
             new Thread(() -> {
                 try {

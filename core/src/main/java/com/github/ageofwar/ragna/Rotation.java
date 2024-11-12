@@ -1,6 +1,8 @@
 package com.github.ageofwar.ragna;
 
 public record Rotation(float roll, float pitch, float yaw) {
+    public static final Rotation ZERO = new Rotation(0, 0, 0);
+
     public Rotation add(Rotation rotation) {
         return new Rotation(roll + rotation.roll, pitch + rotation.pitch, yaw + rotation.yaw);
     }
@@ -13,7 +15,7 @@ public record Rotation(float roll, float pitch, float yaw) {
         return new Rotation(roll % (2 * (float) Math.PI), pitch % (2 * (float) Math.PI), yaw % (2 * (float) Math.PI));
     }
 
-    public float[] rotationMatrix() {
+    public float[] matrix() {
         float cosRoll = (float) Math.cos(roll);
         float sinRoll = (float) Math.sin(roll);
         float cosPitch = (float) Math.cos(pitch);

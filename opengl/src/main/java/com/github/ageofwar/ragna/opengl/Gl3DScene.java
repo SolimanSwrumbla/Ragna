@@ -13,6 +13,8 @@ public class Gl3DScene implements Scene {
     private GlShaderProgram shaderProgram;
     private GlModel[] glModels;
 
+    private Gl3DRenderer renderer;
+
     private Rotation dragStartRotation;
     private double dragStartX;
     private double dragStartY;
@@ -20,6 +22,7 @@ public class Gl3DScene implements Scene {
     public Gl3DScene(Camera camera, Model... models) {
         this.camera = camera;
         this.models = models;
+        this.renderer = new Gl3DRenderer();
     }
 
     @Override
@@ -27,12 +30,15 @@ public class Gl3DScene implements Scene {
         var vertexShader = GlShader.loadVertexFromResources("shaders/3D.vert");
         var fragmentShader = GlShader.loadFragmentFromResources("shaders/3D.frag");
         shaderProgram = GlShaderProgram.create(vertexShader, fragmentShader);
+        GlShaderProgram.bind(shaderProgram);
+        shaderProgram.setUniform("textureSampler", 0);
         vertexShader.close();
         fragmentShader.close();
 
         glModels = new GlModel[models.length];
         for (int i = 0; i < models.length; i++) {
             glModels[i] = GlModel.create(models[i]);
+            renderer.addModel(glModels[i]);
         }
 
         glfwSetMouseButtonCallback(((GlWindow) window).id(), (id, button, action, mods) -> {
@@ -69,23 +75,24 @@ public class Gl3DScene implements Scene {
         var spacePressed = glfwGetKey(glWindow.id(), GLFW_KEY_SPACE) == GLFW_PRESS;
         var leftShiftPressed = glfwGetKey(glWindow.id(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
         if (upPressed) {
-            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch()), 0, (float) Math.cos(camera.rotation().pitch()) }, 0.1f)));
+            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch()), 0, (float) Math.cos(camera.rotation().pitch()) }, 0.01f)));
         }
         if (downPressed) {
-            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch()), 0, (float) Math.cos(camera.rotation().pitch()) }, -0.1f)));
+            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch()), 0, (float) Math.cos(camera.rotation().pitch()) }, -0.01f)));
         }
         if (leftPressed) {
-            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch() + Math.PI / 2), 0, (float) Math.cos(camera.rotation().pitch() + Math.PI / 2) }, 0.1f)));
+            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch() + Math.PI / 2), 0, (float) Math.cos(camera.rotation().pitch() + Math.PI / 2) }, 0.01f)));
         }
         if (rightPressed) {
-            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch() + Math.PI / 2), 0, (float) Math.cos(camera.rotation().pitch() + Math.PI / 2) }, -0.1f)));
+            camera = camera.move(Position.fromVector(Vector.scale(new float[] { (float) Math.sin(camera.rotation().pitch() + Math.PI / 2), 0, (float) Math.cos(camera.rotation().pitch() + Math.PI / 2) }, -0.01f)));
         }
         if (spacePressed) {
-            camera = camera.move(0, -0.1f, 0);
+            camera = camera.move(0, -0.01f, 0);
         }
         if (leftShiftPressed) {
-            camera = camera.move(0, 0.1f, 0);
+            camera = camera.move(0, 0.01f, 0);
         }
+        renderer.updateView(camera);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
@@ -93,10 +100,8 @@ public class Gl3DScene implements Scene {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         GlShaderProgram.bind(shaderProgram);
         var aspectRatio = window.aspectRatio();
-        shaderProgram.setUniform("projectionMatrix", camera.transformMatrix(aspectRatio));
-        for (GlModel glModel : glModels) {
-            glModel.render();
-        }
+        shaderProgram.setUniform("projectionMatrix", camera.matrix(aspectRatio));
+        renderer.render();
     }
 
     @Override

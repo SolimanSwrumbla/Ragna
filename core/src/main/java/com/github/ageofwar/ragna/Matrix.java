@@ -37,6 +37,17 @@ public final class Matrix {
         return result;
     }
 
+    public static float[] productWithVector(float[] matrix, float[] vector) {
+        float[] result = new float[4];
+        for (int i = 0; i < 4; i++) {
+            result[i] = 0;
+            for (int j = 0; j < 4; j++) {
+                result[i] += matrix[i * 4 + j] * vector[j];
+            }
+        }
+        return result;
+    }
+
     public static String toString(float[] matrix) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < 4; i++) {

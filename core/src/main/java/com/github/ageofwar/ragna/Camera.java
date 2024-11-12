@@ -21,7 +21,7 @@ public record Camera(Position position, Rotation rotation, Projection projection
         return new Camera(position, rotation, projection);
     }
 
-    public float[] transformMatrix(float aspectRatio) {
-        return Matrix.product(projection().projectionMatrix(aspectRatio), rotation.rotationMatrix(), position.translationMatrix());
+    public float[] matrix(float aspectRatio) {
+        return Matrix.product(projection().matrix(aspectRatio), rotation.matrix(), position.matrix());
     }
 }

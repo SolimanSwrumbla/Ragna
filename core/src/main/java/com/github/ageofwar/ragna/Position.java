@@ -1,6 +1,8 @@
 package com.github.ageofwar.ragna;
 
 public record Position(float x, float y, float z) {
+    public static final Position ORIGIN = new Position(0, 0, 0);
+
     public static Position fromVector(float[] vector) {
         return new Position(vector[0], vector[1], vector[2]);
     }
@@ -9,7 +11,7 @@ public record Position(float x, float y, float z) {
         return new Position(x + position.x, y + position.y, z + position.z);
     }
 
-    public float[] translationMatrix() {
+    public float[] matrix() {
         return new float[]{
                 1, 0, 0, x,
                 0, 1, 0, y,
