@@ -19,6 +19,7 @@ public class GlWindow implements Window {
     private boolean resizing;
     private Scene scene;
     private long lastRenderTime;
+    private boolean skipFrame = false;
 
     private final ArrayList<Runnable> closeCallbacks = new ArrayList<>();
     private final ArrayList<KeyCallback> keyCallbacks = new ArrayList<>();
@@ -125,8 +126,9 @@ public class GlWindow implements Window {
     public void render(long time) {
         lastRenderTime = time;
         makeContextCurrent();
-        if (scene != null) scene.render(this);
-        swapBuffers();
+        if (scene != null) scene.render(this, time);
+        if (!skipFrame) swapBuffers();
+        skipFrame = false;
     }
 
     @Override
@@ -179,6 +181,11 @@ public class GlWindow implements Window {
         int[] height = new int[1];
         glfwGetFramebufferSize(id, width, height);
         return new CursorPosition(x[0] / width[0], y[0] / height[0]);
+    }
+
+    @Override
+    public void skipFrame() {
+        skipFrame = true;
     }
 
     @Override

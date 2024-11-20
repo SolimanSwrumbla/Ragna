@@ -40,7 +40,7 @@ public class Scene3D implements Scene {
     }
 
     @Override
-    public void render(Window window) {
+    public void render(Window window, long time) {
         var shaderProgram = GlShaders.getShaderProgram3D();
         GlShaderProgram.bind(shaderProgram);
 

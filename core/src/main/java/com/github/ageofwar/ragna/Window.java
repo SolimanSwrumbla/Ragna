@@ -10,6 +10,7 @@ public interface Window {
     boolean isKeyPressed(int key);
     CursorPosition cursorPosition();
     CursorPosition cursorPositionRelative();
+    void skipFrame();
 
     void setCloseCallback(Runnable callback);
     void setKeyCallback(KeyCallback callback);

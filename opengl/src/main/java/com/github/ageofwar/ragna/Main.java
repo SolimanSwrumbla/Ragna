@@ -2,11 +2,13 @@ package com.github.ageofwar.ragna;
 
 import com.github.ageofwar.ragna.opengl.GlEngine;
 import com.github.ageofwar.ragna.opengl.scene.Scene3D;
+import com.github.ageofwar.ragna.opengl.scene.SceneFrameLimit;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class Main {
+    public static final int FPS = 156;
     public static final int IPS = 60;
 
     public static void main(String[] args) {
@@ -25,7 +27,7 @@ public class Main {
         var scene = Scene3D.withEntities(camera, entities());
         setRotationCallback(window, camera.rotation(), new Rotation(2, 2, 2), scene::setCameraRotation);
         setMovementCallback(window, camera.position(), new Position(2, 2, 2), 1000000000 / IPS, scene::getCamera, scene::setCameraPosition);
-        return scene;
+        return SceneFrameLimit.maxFrameRate(scene, FPS);
     }
 
     public static Entity[] entities() {
