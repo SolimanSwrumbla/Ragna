@@ -1,0 +1,83 @@
+package com.github.ageofwar.ragna.opengl.scene;
+
+import com.github.ageofwar.ragna.*;
+import com.github.ageofwar.ragna.opengl.*;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+
+import static org.lwjgl.opengl.GL11.*;
+
+public class Scene3D implements Scene {
+    private final ArrayList<GlEntity> solidEntities = new ArrayList<>();
+    private final ArrayList<GlEntity> transparentEntities = new ArrayList<>();
+
+    private Camera camera;
+
+    public Scene3D(Camera camera) {
+        this.camera = camera;
+    }
+
+    public void addEntities(Entity... entities) {
+        for (Entity entity : entities) {
+            var glEntity = new GlEntity(entity, GlModels.get(entity.model()));
+            if (glEntity.model.isTransparent()) {
+                transparentEntities.add(glEntity);
+            } else {
+                solidEntities.add(glEntity);
+            }
+        }
+        zSort(transparentEntities);
+    }
+
+    @Override
+    public void render(Window window) {
+        var shaderProgram = GlShaders.getShaderProgram3D();
+        GlShaderProgram.bind(shaderProgram);
+
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glEnable(GL_CULL_FACE);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        var aspectRatio = window.aspectRatio();
+        shaderProgram.setUniform("projectionMatrix", camera.matrix(aspectRatio));
+
+        glCullFace(GL_BACK);
+        for (var entity : solidEntities) {
+            shaderProgram.setUniform("modelMatrix", entity.entity.transformMatrix());
+            entity.model.render();
+        }
+        for (var entity : transparentEntities) {
+            shaderProgram.setUniform("modelMatrix", entity.entity.transformMatrix());
+            glCullFace(GL_FRONT);
+            entity.model.render();
+            glCullFace(GL_BACK);
+            entity.model.render();
+        }
+    }
+
+    private void zSort(ArrayList<GlEntity> transparentEntities) {
+        transparentEntities.sort(Comparator.comparing(entity -> -Vector.dotProduct(Matrix.productWithVector(Matrix.product(camera.matrix(16f/9f), entity.entity.transformMatrix()), entity.entity.model().mesh().firstVertexUniform()), camera.rotation().toVector())));
+    }
+
+    public Camera getCamera() {
+        return camera;
+    }
+
+    public void setCamera(Camera camera) {
+        this.camera = camera;
+    }
+
+    public void setCameraPosition(Position position) {
+        camera = camera.withPosition(position);
+    }
+
+    public void setCameraRotation(Rotation rotation) {
+        camera = camera.withRotation(rotation);
+    }
+
+    record GlEntity(Entity entity, GlModel model) {
+    }
+}

@@ -3,6 +3,10 @@ package com.github.ageofwar.ragna;
 public record Rotation(float roll, float pitch, float yaw) {
     public static final Rotation ZERO = new Rotation(0, 0, 0);
 
+    public static Rotation random() {
+        return new Rotation((float) (Math.random() * 2 * Math.PI), (float) (Math.random() * 2 * Math.PI), (float) (Math.random() * 2 * Math.PI));
+    }
+
     public Rotation add(Rotation rotation) {
         return new Rotation(roll + rotation.roll, pitch + rotation.pitch, yaw + rotation.yaw);
     }
@@ -13,6 +17,18 @@ public record Rotation(float roll, float pitch, float yaw) {
 
     public Rotation normalized() {
         return new Rotation(roll % (2 * (float) Math.PI), pitch % (2 * (float) Math.PI), yaw % (2 * (float) Math.PI));
+    }
+
+    public Rotation withRoll(float roll) {
+        return new Rotation(roll, pitch, yaw);
+    }
+
+    public Rotation withPitch(float pitch) {
+        return new Rotation(roll, pitch, yaw);
+    }
+
+    public Rotation withYaw(float yaw) {
+        return new Rotation(roll, pitch, yaw);
     }
 
     public float[] matrix() {

@@ -2,6 +2,7 @@ package com.github.ageofwar.ragna;
 
 public record Position(float x, float y, float z) {
     public static final Position ORIGIN = new Position(0, 0, 0);
+    public static final Position ZERO = new Position(0, 0, 0);
 
     public static Position fromVector(float[] vector) {
         return new Position(vector[0], vector[1], vector[2]);

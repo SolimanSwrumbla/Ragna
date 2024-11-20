@@ -21,7 +21,15 @@ public record Camera(Position position, Rotation rotation, Projection projection
         return new Camera(position, rotation, projection);
     }
 
+    public Camera withProjection(Projection projection) {
+        return new Camera(position, rotation, projection);
+    }
+
+    public Camera withPosition(Position position) {
+        return new Camera(position, rotation, projection);
+    }
+
     public float[] matrix(float aspectRatio) {
-        return Matrix.product(projection().matrix(aspectRatio), rotation.matrix(), position.matrix());
+        return Matrix.product(projection.matrix(aspectRatio), rotation.matrix(), position.matrix());
     }
 }

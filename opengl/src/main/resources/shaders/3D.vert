@@ -8,10 +8,11 @@ out vec4 outColor;
 out vec2 outTexturePos;
 
 uniform mat4 projectionMatrix;
+uniform mat4 modelMatrix;
 
 void main()
 {
-    gl_Position = projectionMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelMatrix * vec4(position, 1.0);
     outColor = color;
     outTexturePos = texturePos;
 }

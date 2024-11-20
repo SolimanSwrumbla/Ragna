@@ -28,12 +28,6 @@ public class FrameLimiterScene implements Scene {
     }
 
     @Override
-    public void init(Window window) {
-        nextRenderTime = 0;
-        scene.init(window);
-    }
-
-    @Override
     public void render(Window window) {
         if (minFrameTime == 0 || window.isResizing()) {
             scene.render(window);

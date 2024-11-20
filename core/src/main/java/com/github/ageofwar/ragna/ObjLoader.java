@@ -92,9 +92,10 @@ public class ObjLoader {
     private static float[] toFloatArray(ArrayList<Float> list, ArrayList<Integer> textureIndices, ArrayList<Integer> indices) {
         var array = new float[indices.size() * 2];
         for (int i = 0; i < indices.size(); i++) {
-            var index = textureIndices.get(i);
-            array[indices.get(i) * 2] = list.get(index * 2);
-            array[indices.get(i) * 2 + 1] = list.get(index * 2 + 1);
+            var textureIndex = textureIndices.get(i);
+            var index = indices.get(i);
+            array[index * 2] = list.get(textureIndex * 2);
+            array[index * 2 + 1] = list.get(textureIndex * 2 + 1);
         }
         return array;
     }

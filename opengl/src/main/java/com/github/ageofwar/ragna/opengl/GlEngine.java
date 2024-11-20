@@ -6,12 +6,11 @@ import com.github.ageofwar.ragna.Window;
 import com.github.ageofwar.ragna.WindowConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.opengl.GLUtil;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.PriorityQueue;
 import java.util.concurrent.*;
+import java.util.function.LongConsumer;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -50,7 +49,8 @@ public class GlEngine implements Engine {
                     window.close();
                     return true;
                 }
-                window.render();
+                var time = System.nanoTime();
+                window.render(time);
                 return false;
             });
         }
@@ -75,52 +75,147 @@ public class GlEngine implements Engine {
     }
 
     @Override
-    public ExecutorService executor() {
+    public Executor executor() {
         return executor;
     }
 
-    private static class EngineExecutorService extends AbstractExecutorService {
-        Queue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+    private static class EngineExecutorService implements Executor {
+        PriorityQueue<Task<?>> tasks = new PriorityQueue<>();
 
-        public void executeRemaining() {
+        public synchronized void executeRemaining() {
             while (!tasks.isEmpty()) {
-                tasks.poll().run();
+                var now = System.nanoTime();
+                var task = tasks.peek();
+                assert task != null;
+                if (task.time <= now) {
+                    task.setExecutionTime(now);
+                    tasks.poll().run();
+                } else {
+                    break;
+                }
             }
         }
 
         @Override
-        public void shutdown() {
-            throw new UnsupportedOperationException();
-        }
-
-        @NotNull
-        @Override
-        public List<Runnable> shutdownNow() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isShutdown() {
-            return false;
+        public synchronized Future<?> execute(Runnable task) {
+            var future = new Task<>(() -> {
+                task.run();
+                return null;
+            });
+            tasks.add(future);
+            return future;
         }
 
         @Override
-        public boolean isTerminated() {
-            return false;
+        public synchronized <T> ScheduledFuture<T> execute(Callable<T> task) {
+            var future = new Task<>(task);
+            tasks.add(future);
+            return future;
         }
 
         @Override
-        public boolean awaitTermination(long timeout, @NotNull TimeUnit unit) throws InterruptedException {
-            throw new UnsupportedOperationException();
+        public synchronized ScheduledFuture<?> schedule(Runnable task, long delay) {
+            var future = new Task<>(() -> {
+                task.run();
+                return null;
+            }, System.nanoTime() + delay);
+            tasks.add(future);
+            return future;
         }
 
         @Override
-        public void execute(@NotNull Runnable command) {
-            tasks.add(command);
+        public <T> ScheduledFuture<T> schedule(Callable<T> task, long delay) {
+            var future = new Task<>(task, System.nanoTime() + delay);
+            tasks.add(future);
+            return future;
         }
 
         @Override
-        public void close() {
+        public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long delay, long period) {
+            return scheduleAtFixedRate((t) -> task.run(), System.nanoTime(), delay, period);
+        }
+
+        @Override
+        public ScheduledFuture<?> scheduleAtFixedRate(LongConsumer task, long delay, long period) {
+            return scheduleAtFixedRate(task, System.nanoTime(), delay, period);
+        }
+
+        private synchronized ScheduledFuture<?> scheduleAtFixedRate(LongConsumer task, long now, long delay, long period) {
+            var future = new Task<>((t) -> {
+                scheduleAtFixedRate(task, now + delay, period, period);
+                task.accept(t);
+            }, now + delay);
+            tasks.add(future);
+            return future;
+        }
+
+        private static class Task<T> implements Runnable, Comparable<Delayed>, ScheduledFuture<T> {
+            private final FutureTask<T> task;
+            private final long time;
+            private long executionTime;
+
+            public Task(Runnable runnable, long time) {
+                this.task = new FutureTask<>(runnable, null);
+                this.time = time;
+            }
+
+            public Task(Callable<T> runnable, long time) {
+                this.task = new FutureTask<>(runnable);
+                this.time = time;
+            }
+
+            public Task(Callable<T> runnable) {
+                this(runnable, 0);
+            }
+
+            public Task(LongConsumer runnable, long time) {
+                this.task = new FutureTask<>(() -> runnable.accept(executionTime), null);
+                this.time = time;
+            }
+
+            private void setExecutionTime(long executionTime) {
+                this.executionTime = executionTime;
+            }
+
+            @Override
+            public long getDelay(@NotNull TimeUnit unit) {
+                return unit.convert(time - System.nanoTime(), TimeUnit.NANOSECONDS);
+            }
+
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return false;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return false;
+            }
+
+            @Override
+            public boolean isDone() {
+                return task.isDone();
+            }
+
+            @Override
+            public T get() throws InterruptedException, ExecutionException {
+                return task.get();
+            }
+
+            @Override
+            public T get(long timeout, @NotNull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                return task.get(timeout, unit);
+            }
+
+            @Override
+            public void run() {
+                task.run();
+            }
+
+            @Override
+            public int compareTo(Delayed o) {
+                return Long.compare(time, o.getDelay(TimeUnit.NANOSECONDS));
+            }
         }
     }
 }

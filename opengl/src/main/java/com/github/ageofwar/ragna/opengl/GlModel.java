@@ -19,7 +19,6 @@ public class GlModel implements AutoCloseable {
     private final int indicesBufferId;
     private final int vertices;
     private final Material material;
-    private final float[] firstVertex;
 
     public static GlModel create(Model model) {
         var objectId = glGenVertexArrays();
@@ -53,7 +52,6 @@ public class GlModel implements AutoCloseable {
         this.indicesBufferId = indicesBufferId;
         this.vertices = vertices;
         this.material = material;
-        this.firstVertex = firstVertex;
     }
 
     public void render() {
@@ -71,14 +69,6 @@ public class GlModel implements AutoCloseable {
 
     public boolean isTransparent() {
         return material.isTransparent();
-    }
-
-    public float[] firstVertex() {
-        return firstVertex;
-    }
-
-    public float[] firstVertexUniform() {
-        return new float[] {firstVertex[0], firstVertex[1], firstVertex[2], 1};
     }
 
     private interface Material {

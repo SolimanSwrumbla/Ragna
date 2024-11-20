@@ -1,10 +1,12 @@
 package com.github.ageofwar.ragna.opengl;
 
+import com.github.ageofwar.ragna.Callback;
 import com.github.ageofwar.ragna.Engine;
 import com.github.ageofwar.ragna.Scene;
 import com.github.ageofwar.ragna.Window;
 import org.lwjgl.opengl.GL;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import static org.lwjgl.glfw.Callbacks.*;
@@ -15,14 +17,19 @@ public class GlWindow implements Window {
     private final Engine engine;
     private final long id;
     private boolean resizing;
-    private boolean renderingRequested;
     private Scene scene;
+    private long lastRenderTime;
+
+    private final ArrayList<Runnable> closeCallbacks = new ArrayList<>();
+    private final ArrayList<KeyCallback> keyCallbacks = new ArrayList<>();
+    private final ArrayList<MouseButtonCallback> mouseButtonCallbacks = new ArrayList<>();
+    private final ArrayList<CursorPositionCallback> cursorPositionCallbacks = new ArrayList<>();
+    private final ArrayList<CursorPositionCallback> cursorPositionRelativeCallbacks = new ArrayList<>();
 
     public GlWindow(long id, Engine engine, Scene scene) {
-        this.engine = Objects.requireNonNull(engine);
         this.id = id;
+        this.engine = Objects.requireNonNull(engine);
         this.scene = Objects.requireNonNull(scene);
-        renderingRequested = true;
     }
 
     public boolean shouldClose() {
@@ -37,6 +44,36 @@ public class GlWindow implements Window {
         glfwMakeContextCurrent(id);
     }
 
+    @Override
+    public void setKeyCallback(KeyCallback callback) {
+        Objects.requireNonNull(callback);
+        keyCallbacks.add(callback);
+    }
+
+    @Override
+    public void setCloseCallback(Runnable callback) {
+        Objects.requireNonNull(callback);
+        closeCallbacks.add(callback);
+    }
+
+    @Override
+    public void setMouseButtonCallback(MouseButtonCallback callback) {
+        Objects.requireNonNull(callback);
+        mouseButtonCallbacks.add(callback);
+    }
+
+    @Override
+    public void setCursorPositionCallback(CursorPositionCallback callback) {
+        Objects.requireNonNull(callback);
+        cursorPositionCallbacks.add(callback);
+    }
+
+    @Override
+    public void setCursorPositionRelativeCallback(CursorPositionCallback callback) {
+        Objects.requireNonNull(callback);
+        cursorPositionRelativeCallbacks.add(callback);
+    }
+
     public void init() {
         makeContextCurrent();
         GL.createCapabilities();
@@ -44,25 +81,49 @@ public class GlWindow implements Window {
         glClearColor(0, 0, 0, 0);
         var viewport = viewportSize();
         glViewport(0, 0, viewport.width(), viewport.height());
-        scene.init(this);
-        glfwSwapInterval(1); // TODO: Make this configurable
+        glfwSwapInterval(0); // TODO: Make this configurable
         glfwSetWindowRefreshCallback(id, (window) -> {
             var viewportSize = viewportSize();
             glViewport(0, 0, viewportSize.width(), viewportSize.height());
             resizing = true;
-            requestRendering();
-            render();
+            render(lastRenderTime);
             resizing = false;
+        });
+        initCallbacks();
+    }
+
+    private void initCallbacks() {
+        glfwSetKeyCallback(id, (window, key, scancode, action, mods) -> {
+            for (var keyCallback : keyCallbacks) {
+                keyCallback.invoke(key, scancode, action, mods);
+            }
+        });
+        glfwSetWindowCloseCallback(id, (window) -> {
+            for (var closeCallback : closeCallbacks) {
+                closeCallback.run();
+            }
+        });
+        glfwSetMouseButtonCallback(id, (window, button, action, mods) -> {
+            for (var mouseButtonCallback : mouseButtonCallbacks) {
+                mouseButtonCallback.invoke(button, action, mods);
+            }
+        });
+        glfwSetCursorPosCallback(id, (window, x, y) -> {
+            for (var cursorPositionCallback : cursorPositionCallbacks) {
+                cursorPositionCallback.invoke(x, y);
+            }
+            for (var cursorPositionRelativeCallback : cursorPositionRelativeCallbacks) {
+                var viewportSize = viewportSize();
+                cursorPositionRelativeCallback.invoke(x / viewportSize.width(), y / viewportSize.height());
+            }
         });
     }
 
-    public void render() {
-        if (renderingRequested) {
-            renderingRequested = false;
-            makeContextCurrent();
-            scene.render(this);
-            swapBuffers();
-        }
+    public void render(long time) {
+        lastRenderTime = time;
+        makeContextCurrent();
+        scene.render(this);
+        swapBuffers();
     }
 
     @Override
@@ -94,13 +155,32 @@ public class GlWindow implements Window {
     }
 
     @Override
-    public Engine engine() {
-        return engine;
+    public boolean isKeyPressed(int key) {
+        return glfwGetKey(id, key) == GLFW_PRESS;
     }
 
     @Override
-    public void requestRendering() {
-        renderingRequested = true;
+    public CursorPosition cursorPosition() {
+        double[] x = new double[1];
+        double[] y = new double[1];
+        glfwGetCursorPos(id, x, y);
+        return new CursorPosition(x[0], y[0]);
+    }
+
+    @Override
+    public CursorPosition cursorPositionRelative() {
+        double[] x = new double[1];
+        double[] y = new double[1];
+        glfwGetCursorPos(id, x, y);
+        int[] width = new int[1];
+        int[] height = new int[1];
+        glfwGetFramebufferSize(id, width, height);
+        return new CursorPosition(x[0] / width[0], y[0] / height[0]);
+    }
+
+    @Override
+    public Engine engine() {
+        return engine;
     }
 
     public long id() {
