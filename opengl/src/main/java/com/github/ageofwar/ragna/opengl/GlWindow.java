@@ -125,14 +125,14 @@ public class GlWindow implements Window {
     public void render(long time) {
         lastRenderTime = time;
         makeContextCurrent();
-        scene.render(this);
+        if (scene != null) scene.render(this);
         swapBuffers();
     }
 
     @Override
     public void close() {
         glfwFreeCallbacks(id);
-        scene.close(this);
+        if (scene != null) scene.close(this);
         glfwDestroyWindow(id);
     }
 

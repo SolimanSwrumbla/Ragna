@@ -21,15 +21,15 @@ public class Main {
     }
 
     public static Scene setupScene(Window window) {
-        var cube = ObjLoader.loadResource("cube.obj", "cube.png");
         var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.01f, 1000f));
-        var scene = Scene3D.withEntities(camera, entities(cube));
+        var scene = Scene3D.withEntities(camera, entities());
         setRotationCallback(window, camera.rotation(), new Rotation(2, 2, 2), scene::setCameraRotation);
         setMovementCallback(window, camera.position(), new Position(2, 2, 2), 1000000000 / IPS, scene::getCamera, scene::setCameraPosition);
         return scene;
     }
 
-    public static Entity[] entities(Model cube) {
+    public static Entity[] entities() {
+        var cube = ObjLoader.loadResource("cube.obj", "cube.png");
         var entities = new Entity[100];
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
