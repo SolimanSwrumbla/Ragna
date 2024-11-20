@@ -1,6 +1,5 @@
 package com.github.ageofwar.ragna.opengl;
 
-import com.github.ageofwar.ragna.Callback;
 import com.github.ageofwar.ragna.Engine;
 import com.github.ageofwar.ragna.Scene;
 import com.github.ageofwar.ragna.Window;
@@ -9,9 +8,10 @@ import org.lwjgl.opengl.GL;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static org.lwjgl.glfw.Callbacks.*;
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL30.glClearColor;
+import static org.lwjgl.opengl.GL30.glViewport;
 
 public class GlWindow implements Window {
     private final Engine engine;
@@ -26,14 +26,17 @@ public class GlWindow implements Window {
     private final ArrayList<CursorPositionCallback> cursorPositionCallbacks = new ArrayList<>();
     private final ArrayList<CursorPositionCallback> cursorPositionRelativeCallbacks = new ArrayList<>();
 
-    public GlWindow(long id, Engine engine, Scene scene) {
+    public GlWindow(long id, Engine engine) {
         this.id = id;
         this.engine = Objects.requireNonNull(engine);
-        this.scene = Objects.requireNonNull(scene);
     }
 
     public boolean shouldClose() {
         return glfwWindowShouldClose(id);
+    }
+
+    public void setScene(Scene scene) {
+        this.scene = scene;
     }
 
     private void swapBuffers() {

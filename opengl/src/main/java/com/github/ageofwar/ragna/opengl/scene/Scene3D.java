@@ -1,7 +1,10 @@
 package com.github.ageofwar.ragna.opengl.scene;
 
 import com.github.ageofwar.ragna.*;
-import com.github.ageofwar.ragna.opengl.*;
+import com.github.ageofwar.ragna.opengl.GlModel;
+import com.github.ageofwar.ragna.opengl.GlModels;
+import com.github.ageofwar.ragna.opengl.GlShaderProgram;
+import com.github.ageofwar.ragna.opengl.GlShaders;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,6 +16,12 @@ public class Scene3D implements Scene {
     private final ArrayList<GlEntity> transparentEntities = new ArrayList<>();
 
     private Camera camera;
+
+    public static Scene3D withEntities(Camera camera, Entity... entities) {
+        var scene = new Scene3D(camera);
+        scene.addEntities(entities);
+        return scene;
+    }
 
     public Scene3D(Camera camera) {
         this.camera = camera;

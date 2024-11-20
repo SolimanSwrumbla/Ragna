@@ -13,7 +13,7 @@ public interface Engine extends Runnable, AutoCloseable {
 
     void close();
 
-    Window createWindow(WindowConfiguration configuration, Scene scene);
+    Window createWindow(WindowConfiguration configuration);
 
     Executor executor();
 

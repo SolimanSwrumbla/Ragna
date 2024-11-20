@@ -1,6 +1,6 @@
 package com.github.ageofwar.ragna;
 
-import com.github.ageofwar.ragna.opengl.*;
+import com.github.ageofwar.ragna.opengl.GlEngine;
 import com.github.ageofwar.ragna.opengl.scene.Scene3D;
 
 import java.util.function.Consumer;
@@ -13,16 +13,20 @@ public class Main {
         var mainThread = Thread.currentThread();
         var windowConfiguration = new WindowConfiguration("Hello World!", 800, 800);
         try (var engine = GlEngine.create()) {
-            var cube = ObjLoader.loadResource("cube.obj", "cube.png");
-            var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.01f, 1000f));
-            var scene = new Scene3D(camera);
-            var window = engine.createWindow(windowConfiguration, scene);
-            scene.addEntities(entities(cube));
+            var window = engine.createWindow(windowConfiguration);
+            window.setScene(setupScene(window));
             window.setCloseCallback(mainThread::interrupt);
-            setRotationCallback(window, camera.rotation(), new Rotation(2, 2, 0), scene::setCameraRotation);
-            setMovementCallback(window, camera.position(), new Position(2, 2, 2), 1000000000 / IPS, scene::getCamera, scene::setCameraPosition);
             engine.run();
         }
+    }
+
+    public static Scene setupScene(Window window) {
+        var cube = ObjLoader.loadResource("cube.obj", "cube.png");
+        var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.01f, 1000f));
+        var scene = Scene3D.withEntities(camera, entities(cube));
+        setRotationCallback(window, camera.rotation(), new Rotation(2, 2, 2), scene::setCameraRotation);
+        setMovementCallback(window, camera.position(), new Position(2, 2, 2), 1000000000 / IPS, scene::getCamera, scene::setCameraPosition);
+        return scene;
     }
 
     public static Entity[] entities(Model cube) {

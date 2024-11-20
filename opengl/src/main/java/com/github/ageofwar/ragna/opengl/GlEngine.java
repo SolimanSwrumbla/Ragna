@@ -1,7 +1,6 @@
 package com.github.ageofwar.ragna.opengl;
 
 import com.github.ageofwar.ragna.Engine;
-import com.github.ageofwar.ragna.Scene;
 import com.github.ageofwar.ragna.Window;
 import com.github.ageofwar.ragna.WindowConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -15,8 +14,8 @@ import java.util.function.LongConsumer;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class GlEngine implements Engine {
-    private EngineExecutorService executor;
-    private ArrayList<GlWindow> windows;
+    private final EngineExecutorService executor;
+    private final ArrayList<GlWindow> windows;
 
     public static GlEngine create() {
         var engine = new GlEngine();
@@ -65,10 +64,10 @@ public class GlEngine implements Engine {
     }
 
     @Override
-    public Window createWindow(WindowConfiguration configuration, Scene scene) {
+    public Window createWindow(WindowConfiguration configuration) {
         var id = glfwCreateWindow(configuration.width(), configuration.height(), configuration.title(), 0, 0);
         if (id == 0) throw new RuntimeException("Unable to create window");
-        var window = new GlWindow(id, this, scene);
+        var window = new GlWindow(id, this);
         this.windows.add(window);
         window.init();
         return window;
@@ -115,10 +114,7 @@ public class GlEngine implements Engine {
 
         @Override
         public synchronized ScheduledFuture<?> schedule(Runnable task, long delay) {
-            var future = new Task<>(() -> {
-                task.run();
-                return null;
-            }, System.nanoTime() + delay);
+            var future = new Task<>(task, System.nanoTime() + delay);
             tasks.add(future);
             return future;
         }

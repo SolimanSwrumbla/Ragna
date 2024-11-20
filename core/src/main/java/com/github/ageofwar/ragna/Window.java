@@ -2,6 +2,7 @@ package com.github.ageofwar.ragna;
 
 public interface Window {
     void close();
+    void setScene(Scene scene);
     Size viewportSize();
     float aspectRatio();
     boolean isResizing();
