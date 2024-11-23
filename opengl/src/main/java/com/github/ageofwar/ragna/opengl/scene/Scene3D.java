@@ -9,7 +9,7 @@ import com.github.ageofwar.ragna.opengl.GlShaders;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.*;
 
 public class Scene3D implements Scene {
     private final ArrayList<GlEntity> solidEntities = new ArrayList<>();
@@ -37,6 +37,12 @@ public class Scene3D implements Scene {
             }
         }
         zSort(transparentEntities);
+    }
+
+    public void setEntities(Entity... entities) {
+        solidEntities.clear();
+        transparentEntities.clear();
+        addEntities(entities);
     }
 
     @Override
@@ -68,7 +74,7 @@ public class Scene3D implements Scene {
     }
 
     private void zSort(ArrayList<GlEntity> transparentEntities) {
-        transparentEntities.sort(Comparator.comparing(entity -> -Vector.dotProduct(Matrix.productWithVector(Matrix.product(camera.matrix(16f/9f), entity.entity.transformMatrix()), entity.entity.model().mesh().firstVertexUniform()), camera.rotation().toVector())));
+        transparentEntities.sort(Comparator.comparing(entity -> -Vector.norm(Matrix.productWithVector(Matrix.product(camera.viewMatrix()), entity.entity.position().vectorUniform()))));
     }
 
     public Camera getCamera() {
@@ -77,14 +83,15 @@ public class Scene3D implements Scene {
 
     public void setCamera(Camera camera) {
         this.camera = camera;
+        zSort(transparentEntities);
     }
 
     public void setCameraPosition(Position position) {
-        camera = camera.withPosition(position);
+        setCamera(camera.withPosition(position));
     }
 
     public void setCameraRotation(Rotation rotation) {
-        camera = camera.withRotation(rotation);
+        setCamera(camera.withRotation(rotation));
     }
 
     record GlEntity(Entity entity, GlModel model) {

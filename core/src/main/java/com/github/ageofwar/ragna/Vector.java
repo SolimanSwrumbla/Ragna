@@ -13,7 +13,11 @@ public class Vector {
     }
 
     public static float dotProduct(float[] vector1, float[] vector2) {
-        return vector1[0] * vector2[0] + vector1[1] * vector2[1] + vector1[2] * vector2[2];
+        var sum = 0f;
+        for (int i = 0; i < 3; i++) {
+            sum += vector1[i] * vector2[i];
+        }
+        return sum;
     }
 
     public static float[] normalize(float[] vector) {
@@ -24,5 +28,9 @@ public class Vector {
 
     public static boolean isZero(float[] vector) {
         return vector[0] == 0 && vector[1] == 0 && vector[2] == 0;
+    }
+
+    public static float norm(float[] vector) {
+        return  (float) Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
     }
 }

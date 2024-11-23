@@ -2,7 +2,6 @@ package com.github.ageofwar.ragna.opengl;
 
 import com.github.ageofwar.ragna.Model;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

@@ -11,6 +11,7 @@ public interface Window {
     CursorPosition cursorPosition();
     CursorPosition cursorPositionRelative();
     void skipFrame();
+    void setVSync(boolean vSync);
 
     void setCloseCallback(Runnable callback);
     void setKeyCallback(KeyCallback callback);

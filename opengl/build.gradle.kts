@@ -1,4 +1,7 @@
-import org.lwjgl.*
+import org.lwjgl.Lwjgl
+import org.lwjgl.Release
+import org.lwjgl.lwjgl
+import org.lwjgl.sonatype
 
 plugins {
     id("java-library")
@@ -27,7 +30,6 @@ dependencies {
         version = Release.latest
         implementation(Lwjgl.Preset.minimalOpenGL)
         implementation(Lwjgl.Addons.`joml 1․10․7`)
-        implementation(Lwjgl.Module.assimp)
     }
 }
 

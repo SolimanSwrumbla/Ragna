@@ -23,19 +23,19 @@ public class Main {
     }
 
     public static Scene setupScene(Window window) {
+        var cube = ModelLoader.load("assets/cube.obj")[0];
         var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.01f, 1000f));
-        var scene = Scene3D.withEntities(camera, entities());
+        var scene = Scene3D.withEntities(camera, entities(cube));
         setRotationCallback(window, camera.rotation(), new Rotation(2, 2, 2), scene::setCameraRotation);
-        setMovementCallback(window, camera.position(), new Position(2, 2, 2), 1000000000 / IPS, scene::getCamera, scene::setCameraPosition);
+        setMovementCallback(window, camera.position(), new Position(2, 2, 2), Math.ceilDiv(1000000000L, IPS), scene::getCamera, scene::setCameraPosition);
         return SceneFrameLimit.maxFrameRate(scene, FPS);
     }
 
-    public static Entity[] entities() {
-        var cube = ObjLoader.loadResource("cube.obj", "cube.png");
+    public static Entity[] entities(Model model) {
         var entities = new Entity[100];
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                entities[i * 10 + j] = new Entity(cube, new Position(i - 5, -1, j - 5), Rotation.ZERO, 1);
+                entities[i * 10 + j] = new Entity(model, new Position(i - 5, -1, j - 5), Rotation.ZERO, new Scale(0.999f));
             }
         }
         // random

@@ -46,7 +46,7 @@ public record Rotation(float roll, float pitch, float yaw) {
         };
     }
 
-    public float[] toVector() {
+    public float[] vector() {
         float cosPitch = (float) Math.cos(pitch);
         float sinPitch = (float) Math.sin(pitch);
         float cosYaw = (float) Math.cos(yaw);

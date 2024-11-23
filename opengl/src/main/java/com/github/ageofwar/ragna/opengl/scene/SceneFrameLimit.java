@@ -16,7 +16,7 @@ public class SceneFrameLimit implements Scene {
     }
 
     public static SceneFrameLimit maxFrameRate(Scene scene, int maxFrameRate) {
-        return new SceneFrameLimit(scene, 1000000000L / maxFrameRate);
+        return new SceneFrameLimit(scene, Math.ceilDiv(1000000000L, maxFrameRate));
     }
 
     public static SceneFrameLimit minFrameTime(Scene scene, long minFrameTime) {

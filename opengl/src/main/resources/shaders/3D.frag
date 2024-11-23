@@ -9,8 +9,8 @@ uniform sampler2D textureSampler;
 
 void main()
 {
-    vec4 texureColor = (outTexturePos.x != -1 || outTexturePos.y != -1) ?
+    vec4 textureColor = (outTexturePos.x > -0.1 || outTexturePos.y > -0.1) ?
         texture(textureSampler, outTexturePos) :
         vec4(0,0,0,0);
-    fragColor = texureColor + outColor * (1 - texureColor.a);
+    fragColor = textureColor + outColor * (1 - textureColor.a);
 }

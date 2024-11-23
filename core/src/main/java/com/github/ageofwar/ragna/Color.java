@@ -26,6 +26,10 @@ public final class Color {
         return new Color(red, green, blue, 1);
     }
 
+    public static Color gray(float gray) {
+        return rgb(gray, gray, gray);
+    }
+
     private Color(float red, float green, float blue, float alpha) {
         this.red = red;
         this.green = green;
@@ -47,6 +51,22 @@ public final class Color {
 
     public float alpha() {
         return alpha;
+    }
+
+    public Color withRed(float red) {
+        return new Color(red, green, blue, alpha);
+    }
+
+    public Color withGreen(float green) {
+        return new Color(red, green, blue, alpha);
+    }
+
+    public Color withBlue(float blue) {
+        return new Color(red, green, blue, alpha);
+    }
+
+    public Color withAlpha(float alpha) {
+        return new Color(red, green, blue, alpha);
     }
 
     @Override

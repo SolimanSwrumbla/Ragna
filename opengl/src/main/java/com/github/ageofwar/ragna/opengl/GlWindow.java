@@ -85,7 +85,7 @@ public class GlWindow implements Window {
         glClearColor(0, 0, 0, 0);
         var viewport = viewportSize();
         glViewport(0, 0, viewport.width(), viewport.height());
-        glfwSwapInterval(0); // TODO: Make this configurable
+        setVSync(false);
         glfwSetWindowRefreshCallback(id, (window) -> {
             var viewportSize = viewportSize();
             glViewport(0, 0, viewportSize.width(), viewportSize.height());
@@ -186,6 +186,11 @@ public class GlWindow implements Window {
     @Override
     public void skipFrame() {
         skipFrame = true;
+    }
+
+    @Override
+    public void setVSync(boolean vSync) {
+        glfwSwapInterval(vSync ? 1 : 0);
     }
 
     @Override

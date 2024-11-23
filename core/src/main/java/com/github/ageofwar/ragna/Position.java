@@ -8,6 +8,14 @@ public record Position(float x, float y, float z) {
         return new Position(vector[0], vector[1], vector[2]);
     }
 
+    public float[] vectorUniform() {
+        return new float[]{x, y, z, 1};
+    }
+
+    public float[] vector() {
+        return new float[]{x, y, z};
+    }
+
     public Position add(Position position) {
         return new Position(x + position.x, y + position.y, z + position.z);
     }
