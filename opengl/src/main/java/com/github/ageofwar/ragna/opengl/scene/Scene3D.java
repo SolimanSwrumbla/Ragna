@@ -14,6 +14,9 @@ import static org.lwjgl.opengl.GL30.*;
 public class Scene3D implements Scene {
     private final ArrayList<GlEntity> solidEntities = new ArrayList<>();
     private final ArrayList<GlEntity> transparentEntities = new ArrayList<>();
+    private final ArrayList<Light.Ambient> ambientLights = new ArrayList<>();
+    private final ArrayList<Light.Point> pointLights = new ArrayList<>();
+    private final ArrayList<Light.Directional> directionalLights = new ArrayList<>();
 
     private Camera camera;
 
@@ -45,6 +48,18 @@ public class Scene3D implements Scene {
         addEntities(entities);
     }
 
+    public void addLights(Light... lights) {
+        for (Light light : lights) {
+            if (light instanceof Light.Ambient ambientLight) {
+                ambientLights.add(ambientLight);
+            } else if (light instanceof Light.Point pointLight) {
+                pointLights.add(pointLight);
+            } else if (light instanceof Light.Directional directionalLight) {
+                directionalLights.add(directionalLight);
+            }
+        }
+    }
+
     @Override
     public void render(Window window, long time) {
         var shaderProgram = GlShaders.getShaderProgram3D();
@@ -58,18 +73,28 @@ public class Scene3D implements Scene {
 
         var aspectRatio = window.aspectRatio();
         shaderProgram.setUniform("projectionMatrix", camera.matrix(aspectRatio));
+        shaderProgram.setUniform("ambientLightsSize", ambientLights.size());
+        for (int i = 0; i < ambientLights.size(); i++) {
+            shaderProgram.setUniform("ambientLights[" + i + "]", ambientLights.get(i));
+        }
+        shaderProgram.setUniform("directionalLightsSize", directionalLights.size());
+        for (int i = 0; i < directionalLights.size(); i++) {
+            shaderProgram.setUniform("directionalLights[" + i + "]", directionalLights.get(i));
+        }
+        shaderProgram.setUniform("pointLightsSize", pointLights.size());
+        for (int i = 0; i < pointLights.size(); i++) {
+            shaderProgram.setUniform("pointLights[" + i + "]", pointLights.get(i));
+        }
 
         glCullFace(GL_BACK);
         for (var entity : solidEntities) {
-            shaderProgram.setUniform("modelMatrix", entity.entity.transformMatrix());
-            entity.model.render();
+            entity.render(shaderProgram);
         }
         for (var entity : transparentEntities) {
-            shaderProgram.setUniform("modelMatrix", entity.entity.transformMatrix());
             glCullFace(GL_FRONT);
-            entity.model.render();
+            entity.render(shaderProgram);
             glCullFace(GL_BACK);
-            entity.model.render();
+            entity.render(shaderProgram);
         }
     }
 
@@ -95,5 +120,9 @@ public class Scene3D implements Scene {
     }
 
     record GlEntity(Entity entity, GlModel model) {
+        public void render(GlShaderProgram shaderProgram) {
+            shaderProgram.setUniform("modelMatrix", entity.transformMatrix());
+            model.render(shaderProgram);
+        }
     }
 }

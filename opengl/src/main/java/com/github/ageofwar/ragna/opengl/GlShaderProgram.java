@@ -1,5 +1,8 @@
 package com.github.ageofwar.ragna.opengl;
 
+import com.github.ageofwar.ragna.Color;
+import com.github.ageofwar.ragna.Light;
+
 import static org.lwjgl.opengl.GL30.*;
 
 public record GlShaderProgram(int id) implements AutoCloseable {
@@ -35,8 +38,36 @@ public record GlShaderProgram(int id) implements AutoCloseable {
         glUniform1i(glGetUniformLocation(id, name), value);
     }
 
+    public void setUniform(String name, float value) {
+        glUniform1f(glGetUniformLocation(id, name), value);
+    }
+
     public void setUniform(String name, float[] value) {
         glUniformMatrix4fv(glGetUniformLocation(id, name), true, value);
+    }
+
+    public void setUniform(String name, Color value) {
+        glUniform4f(glGetUniformLocation(id, name), value.red(), value.green(), value.blue(), value.alpha());
+    }
+
+    public void setUniform(String name, Light.Ambient value) {
+        glUniform3f(glGetUniformLocation(id, name + ".color"), value.color().red(), value.color().green(), value.color().blue());
+        glUniform1f(glGetUniformLocation(id, name + ".intensity"), value.intensity());
+    }
+
+    public void setUniform(String name, Light.Directional value) {
+        glUniform3f(glGetUniformLocation(id, name + ".color"), value.color().red(), value.color().green(), value.color().blue());
+        glUniform1f(glGetUniformLocation(id, name + ".intensity"), value.intensity());
+        glUniform3f(glGetUniformLocation(id, name + ".direction"), value.direction().x(), value.direction().y(), value.direction().z());
+    }
+
+    public void setUniform(String name, Light.Point value) {
+        glUniform3f(glGetUniformLocation(id, name + ".color"), value.color().red(), value.color().green(), value.color().blue());
+        glUniform3f(glGetUniformLocation(id, name + ".position"), value.position().x(), value.position().y(), value.position().z());
+        glUniform1f(glGetUniformLocation(id, name + ".intensity"), value.intensity());
+        glUniform1f(glGetUniformLocation(id, name + ".attenuation.constant"), value.attenuation().constant());
+        glUniform1f(glGetUniformLocation(id, name + ".attenuation.linear"), value.attenuation().linear());
+        glUniform1f(glGetUniformLocation(id, name + ".attenuation.quadratic"), value.attenuation().quadratic());
     }
 
     public void link() {

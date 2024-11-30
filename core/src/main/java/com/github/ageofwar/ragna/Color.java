@@ -18,6 +18,10 @@ public final class Color {
     public static final Color MAGENTA = rgb(1, 0, 1);
     public static final Color TRANSPARENT = rgba(0, 0, 0, 0);
 
+    public static Color rgba(float[] rgba) {
+        return rgba(rgba[0], rgba[1], rgba[2], rgba[3]);
+    }
+
     public static Color rgba(float red, float green, float blue, float alpha) {
         return new Color(red, green, blue, alpha);
     }
@@ -83,6 +87,11 @@ public final class Color {
 
     @Override
     public String toString() {
-        return super.toString();
+        return "Color{" +
+                "red=" + red +
+                ", green=" + green +
+                ", blue=" + blue +
+                ", alpha=" + alpha +
+                '}';
     }
 }

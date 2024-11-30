@@ -24,23 +24,33 @@ public class Main {
 
     public static Scene setupScene(Window window) {
         var cube = ModelLoader.load("assets/cube.obj")[0];
-        var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.01f, 1000f));
+        var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.1f, 100f));
         var scene = Scene3D.withEntities(camera, entities(cube));
+        scene.addLights(
+                new Light.Ambient(Color.WHITE, 0.1f),
+                new Light.Directional(Direction.DOWN.add(Direction.LEFT).add(Direction.LEFT), Color.WHITE, 0.5f),
+                new Light.Point(Position.ORIGIN, Color.WHITE, 1f, new Light.Attenuation(1, 1, 1))
+        );
         setRotationCallback(window, camera.rotation(), new Rotation(2, 2, 2), scene::setCameraRotation);
         setMovementCallback(window, camera.position(), new Position(2, 2, 2), Math.ceilDiv(1000000000L, IPS), scene::getCamera, scene::setCameraPosition);
         return SceneFrameLimit.maxFrameRate(scene, FPS);
     }
 
-    public static Entity[] entities(Model model) {
-        var entities = new Entity[100];
+    public static Entity[] entities(Model model, Model... models) {
+        var entities = new Entity[200 + models.length];
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                entities[i * 10 + j] = new Entity(model, new Position(i - 5, -1, j - 5), Rotation.ZERO, new Scale(0.999f));
+                entities[i * 10 + j] = new Entity(model, new Position(i - 5, -1, j - 5));
+            }
+        }
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                entities[100 + i * 10 + j] = new Entity(model, new Position(i - 5, -5, j - 5));
             }
         }
         // random
         // for (int i = 0; i < 100; i++) {
-        //     entities[i] = new Entity(cube, Position.fromVector(new float[]{(float) Math.random() * 10 - 5, (float) Math.random() * 10 - 5, (float) Math.random() * 10 - 5}), Rotation.random(), (float) Math.random() + 0.5f);
+        //     entities[i] = new Entity(model, Position.fromVector(new float[]{(float) Math.random() * 10 - 5, (float) Math.random() * 10 - 5, (float) Math.random() * 10 - 5}), Rotation.random(), new Scale((float) Math.random() + 0.5f));
         // }
         return entities;
     }

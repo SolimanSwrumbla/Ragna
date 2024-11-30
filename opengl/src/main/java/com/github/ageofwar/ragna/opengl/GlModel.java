@@ -3,11 +3,8 @@ package com.github.ageofwar.ragna.opengl;
 import com.github.ageofwar.ragna.Model;
 import org.lwjgl.system.MemoryStack;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.Arrays;
 
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.stb.STBImage.*;
@@ -16,6 +13,7 @@ public class GlModel implements AutoCloseable {
     private final int objectId;
     private final int positionsBufferId;
     private final int indicesBufferId;
+    private final int normalsBufferId;
     private final int vertices;
     private final Material material;
 
@@ -30,8 +28,15 @@ public class GlModel implements AutoCloseable {
         glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glVertexAttrib2fv(2, new float[] {-1, -1});
-        glDisableVertexAttribArray(2);
+        glVertexAttrib2fv(1, new float[] {-1, -1});
+        glDisableVertexAttribArray(1);
+
+        var normalsBufferId = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, normalsBufferId);
+        glBufferData(GL_ARRAY_BUFFER, model.mesh().normals(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, false, 0, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         var material = Material.from(model.material());
         material.create(model);
@@ -42,19 +47,21 @@ public class GlModel implements AutoCloseable {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindVertexArray(0);
-        return new GlModel(objectId, positionsBufferId, indicesBufferId, model.mesh().numVertices(), material, Arrays.copyOfRange(model.mesh().vertices(), 0, 3));
+        return new GlModel(objectId, positionsBufferId, indicesBufferId, normalsBufferId, model.mesh().numVertices(), material);
     }
 
-    private GlModel(int objectId, int positionsBufferId, int indicesBufferId, int vertices, Material material, float[] firstVertex) {
+    private GlModel(int objectId, int positionsBufferId, int indicesBufferId, int normalsBufferId, int vertices, Material material) {
         this.objectId = objectId;
         this.positionsBufferId = positionsBufferId;
         this.indicesBufferId = indicesBufferId;
+        this.normalsBufferId = normalsBufferId;
         this.vertices = vertices;
         this.material = material;
     }
 
-    public void render() {
+    public void render(GlShaderProgram shaderProgram) {
         glBindVertexArray(objectId);
+        material.prerender(shaderProgram);
         glDrawElements(GL_TRIANGLES, vertices, GL_UNSIGNED_INT, 0);
     }
 
@@ -63,6 +70,7 @@ public class GlModel implements AutoCloseable {
         material.close();
         glDeleteBuffers(indicesBufferId);
         glDeleteBuffers(positionsBufferId);
+        glDeleteBuffers(normalsBufferId);
         glDeleteVertexArrays(objectId);
     }
 
@@ -78,19 +86,16 @@ public class GlModel implements AutoCloseable {
             if (material instanceof com.github.ageofwar.ragna.Material.Texture texture) {
                 return new Texture(texture);
             }
-            if (material instanceof com.github.ageofwar.ragna.Material.TextureFromResource texture) {
-                return new Texture(texture);
-            }
             throw new IllegalArgumentException();
         }
 
         void create(Model model);
+        void prerender(GlShaderProgram shaderProgram);
         void close();
         boolean isTransparent();
 
         class Fill implements Material {
             private final com.github.ageofwar.ragna.Material.Fill fill;
-            private int colorsBufferId = 0;
 
             public Fill(com.github.ageofwar.ragna.Material.Fill fill) {
                 this.fill = fill;
@@ -98,50 +103,30 @@ public class GlModel implements AutoCloseable {
 
             @Override
             public void create(Model model) {
-                var vertices = model.mesh().numVertices();
-                var colors = new float[vertices * 4];
-                for (int i = 0; i < vertices; i++) {
-                    colors[i * 4] = fill.color().red();
-                    colors[i * 4 + 1] = fill.color().green();
-                    colors[i * 4 + 2] = fill.color().blue();
-                    colors[i * 4 + 3] = fill.color().alpha();
-                }
-                colorsBufferId = glGenBuffers();
-                glBindBuffer(GL_ARRAY_BUFFER, colorsBufferId);
-                glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
-                glEnableVertexAttribArray(1);
-                glVertexAttribPointer(1, 4, GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
+
+            @Override
+            public void prerender(GlShaderProgram shaderProgram) {
+                shaderProgram.setUniform("material.ambient", fill.ambientColor());
             }
 
             @Override
             public void close() {
-                glDeleteBuffers(colorsBufferId);
             }
 
             @Override
             public boolean isTransparent() {
-                return fill.color().alpha() < 1;
+                return fill.ambientColor().alpha() < 1;
             }
         }
 
         class Texture implements Material {
-            private final String path;
-            private final boolean fromResource;
-            private final float[] coordinates;
+            private final com.github.ageofwar.ragna.Material.Texture texture;
             private int textureId;
             private int textureBufferId;
 
             public Texture(com.github.ageofwar.ragna.Material.Texture texture) {
-                this.path = texture.path();
-                this.fromResource = false;
-                this.coordinates = texture.coordinates();
-            }
-
-            public Texture(com.github.ageofwar.ragna.Material.TextureFromResource texture) {
-                this.path = texture.path();
-                this.fromResource = true;
-                this.coordinates = texture.coordinates();
+                this.texture = texture;
             }
 
             @Override
@@ -164,9 +149,9 @@ public class GlModel implements AutoCloseable {
 
                     textureBufferId = glGenBuffers();
                     glBindBuffer(GL_ARRAY_BUFFER, textureBufferId);
-                    glBufferData(GL_ARRAY_BUFFER, coordinates, GL_STATIC_DRAW);
-                    glEnableVertexAttribArray(2);
-                    glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, 0);
+                    glBufferData(GL_ARRAY_BUFFER, texture.coordinates(), GL_STATIC_DRAW);
+                    glEnableVertexAttribArray(1);
+                    glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                 }
             }
@@ -182,19 +167,15 @@ public class GlModel implements AutoCloseable {
             }
 
             private ByteBuffer load(IntBuffer widthBuffer, IntBuffer heightBuffer, IntBuffer channels) {
-                if (fromResource) {
-                    try (var stream = getClass().getClassLoader().getResourceAsStream(path)) {
-                        if (stream == null) throw new IOException("Resource not found: " + path);
-                        var bytes = stream.readAllBytes();
-                        var buffer = ByteBuffer.allocateDirect(bytes.length);
-                        buffer.put(bytes).flip();
-                        return stbi_load_from_memory(buffer, widthBuffer, heightBuffer, channels, 4);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                } else {
-                    return stbi_load(path, widthBuffer, heightBuffer, channels, 4);
-                }
+                return stbi_load(texture.path(), widthBuffer, heightBuffer, channels, 4);
+            }
+
+            @Override
+            public void prerender(GlShaderProgram shaderProgram) {
+                shaderProgram.setUniform("material.ambient", texture.ambientColor());
+                shaderProgram.setUniform("material.diffuse", texture.diffuseColor());
+                shaderProgram.setUniform("material.specular", texture.specularColor());
+                shaderProgram.setUniform("material.reflectance", texture.reflectance());
             }
 
             @Override

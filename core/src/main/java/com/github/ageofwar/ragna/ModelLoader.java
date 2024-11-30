@@ -3,9 +3,6 @@ package com.github.ageofwar.ragna;
 import org.lwjgl.assimp.*;
 import org.lwjgl.system.MemoryStack;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 
@@ -16,7 +13,7 @@ public class ModelLoader {
     }
 
     public static Model[] load(String mesh) {
-        return load(mesh,  aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices |
+        return load(mesh, aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices |
                 aiProcess_Triangulate | aiProcess_FixInfacingNormals | aiProcess_CalcTangentSpace | aiProcess_LimitBoneWeights |
                 aiProcess_PreTransformVertices);
     }
@@ -28,32 +25,6 @@ public class ModelLoader {
             }
             var modelDir = mesh.substring(0, mesh.lastIndexOf('/') + 1);
             return load(scene, modelDir);
-        }
-    }
-
-    public static Model[] loadResource(String mesh) {
-        return loadResource(mesh,  aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices |
-                aiProcess_Triangulate | aiProcess_FixInfacingNormals | aiProcess_CalcTangentSpace | aiProcess_LimitBoneWeights |
-                aiProcess_PreTransformVertices);
-    }
-
-    private static Model[] loadResource(String mesh, int flags) {
-        try (var stream = ModelLoader.class.getClassLoader().getResourceAsStream(mesh)) {
-            if (stream == null) {
-                throw new IOException("Resource not found: " + mesh);
-            }
-            var bytes = stream.readAllBytes();
-            var buffer = ByteBuffer.allocateDirect(bytes.length);
-            buffer.put(bytes).flip();
-            try (var scene = aiImportFileFromMemory(buffer, flags, mesh)) {
-                if (scene == null) {
-                    throw new RuntimeException("Error loading model [resource: " + mesh + "]");
-                }
-                var modelDir = mesh.substring(0, mesh.lastIndexOf('/') + 1);
-                return load(scene, modelDir);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 
@@ -135,19 +106,34 @@ public class ModelLoader {
 
     private static Material load(AIMaterial aiMaterial, AIMesh aiMesh, String modelDir) {
         var textCoords = loadTextCoords(aiMesh);
-        float[] diffuseColor = new float[] { 0.1f, 0.1f, 0.1f, 1 };
+        float[] ambientColor = new float[4];
+        float[] diffuseColor = new float[4];
+        float[] specularColor = new float[4];
         String texture = null;
         try (var stack = MemoryStack.stackPush()) {
             var color = AIColor4D.create();
 
-            int result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0, color);
+            int result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_AMBIENT, aiTextureType_NONE, 0, color);
+            if (result == aiReturn_SUCCESS) {
+                ambientColor = new float[] { color.r(), color.g(), color.b(), color.a() };
+            }
+
+            result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0, color);
             if (result == aiReturn_SUCCESS) {
                 diffuseColor = new float[] { color.r(), color.g(), color.b(), color.a() };
             }
 
+            result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_SPECULAR, aiTextureType_NONE, 0, color);
+            if (result == aiReturn_SUCCESS) {
+                specularColor = new float[] { color.r(), color.g(), color.b(), color.a() };
+            }
+
+            var reflectance = new float[1];
+            aiGetMaterialFloatArray(aiMaterial, AI_MATKEY_SHININESS_STRENGTH, aiTextureType_NONE, 0, reflectance, new int[] { 1 });
+
             var aiTexturePath = AIString.calloc(stack);
             result = aiGetMaterialTexture(aiMaterial, aiTextureType_DIFFUSE, 0, aiTexturePath, (IntBuffer) null, null, null, null, null, null);
-            System.out.println(aiTexturePath.dataString());
+
             if (result == aiReturn_SUCCESS) {
                 String texturePath = aiTexturePath.dataString();
                 if (!texturePath.isEmpty()) {
@@ -159,8 +145,8 @@ public class ModelLoader {
                 }
             }
 
-            if (texture != null) return new Material.Texture(texture, textCoords);
-            return new Material.Fill(Color.rgba(diffuseColor[0], diffuseColor[1], diffuseColor[2], diffuseColor[3]));
+            if (texture != null) return new Material.Texture(texture, textCoords, Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0]);
+            return new Material.Fill(Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0]);
         }
     }
 

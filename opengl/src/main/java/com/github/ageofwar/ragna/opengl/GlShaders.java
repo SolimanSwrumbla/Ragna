@@ -28,6 +28,7 @@ public class GlShaders {
             shaderProgram3D = GlShaderProgram.create(getVertexShader3D(), getFragmentShader3D());
             GlShaderProgram.bind(shaderProgram3D);
             shaderProgram3D.setUniform("textureSampler", 0);
+            shaderProgram3D.setUniform("specularPower", 10);
         }
         return shaderProgram3D;
     }
