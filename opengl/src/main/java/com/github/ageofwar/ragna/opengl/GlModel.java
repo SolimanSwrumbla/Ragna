@@ -175,6 +175,7 @@ public class GlModel implements AutoCloseable {
 
             @Override
             public void prerender(GlShaderProgram shaderProgram) {
+                glBindTexture(GL_TEXTURE_2D, textureId);
                 shaderProgram.setUniform("material.ambient", texture.ambientColor());
                 shaderProgram.setUniform("material.diffuse", texture.diffuseColor());
                 shaderProgram.setUniform("material.specular", texture.specularColor());

@@ -1,11 +1,11 @@
 package com.github.ageofwar.ragna;
 
-public record Entity(Model model, Position position, Rotation rotation, Scale scale) {
-    public Entity(Model model, Position position, Rotation rotation) {
+public record Entity(Model[] model, Position position, Rotation rotation, Scale scale) {
+    public Entity(Model[] model, Position position, Rotation rotation) {
         this(model, position, rotation, Scale.ONE);
     }
 
-    public Entity(Model model, Position position) {
+    public Entity(Model[] model, Position position) {
         this(model, position, Rotation.ZERO, Scale.ONE);
     }
 

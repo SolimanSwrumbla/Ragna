@@ -1,9 +1,11 @@
 package com.github.ageofwar.ragna;
 
 import com.github.ageofwar.ragna.opengl.GlEngine;
+import com.github.ageofwar.ragna.opengl.scene.DebugScene;
 import com.github.ageofwar.ragna.opengl.scene.Scene3D;
 import com.github.ageofwar.ragna.opengl.scene.SceneFrameLimit;
 
+import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -23,43 +25,30 @@ public class Main {
     }
 
     public static Scene setupScene(Window window) {
-        var cube = ModelLoader.load("assets/cube.obj")[0];
+        var cube = ModelLoader.load("assets/cube.obj");
         var auto = ModelLoader.load("assets/Car-Model/Car.obj");
+        var airplane = ModelLoader.load("assets/airplane/11803_Airplane_v1_l1.obj");
         var camera = new Camera(Position.ORIGIN, Rotation.ZERO, new PerspectiveProjection((float) Math.toRadians(90), 0.1f, 100f));
-        var scene = Scene3D.withEntities(camera, entities(cube, auto));
+        var scene = Scene3D.withEntities(camera, entities(cube, auto, airplane));
         scene.addLights(
                 new Light.Ambient(Color.WHITE, 0.1f),
-                new Light.Directional(Direction.DOWN.add(Direction.LEFT).add(Direction.LEFT), Color.WHITE, 0.5f),
-                new Light.Point(new Position(-1,2,0), Color.WHITE, 2f, new Light.Attenuation(1, 0.1f, 1)),
-                new Light.Point(new Position(4,4,4), Color.WHITE, 2f, new Light.Attenuation(1, 0.1f, 1))
+                new Light.Directional(new Direction(1, -1, 1), Color.WHITE, 0.5f)
         );
         setRotationCallback(window, camera.rotation(), new Rotation(2, 2, 2), scene::setCameraRotation);
         setMovementCallback(window, camera.position(), new Position(2, 2, 2), Math.ceilDiv(1000000000L, IPS), scene::getCamera, scene::setCameraPosition);
-        return SceneFrameLimit.maxFrameRate(scene, FPS);
+        return new DebugScene(SceneFrameLimit.maxFrameRate(scene, FPS));
     }
 
-    public static Entity[] entities(Model model, Model... models) {
-        var entities = new Entity[202 + models.length];
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                entities[i * 10 + j] = new Entity(model, new Position(i - 4.5f, -1, j - 4.5f));
+    public static Entity[] entities(Model[]... models) {
+        var entities = new ArrayList<Entity>();
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100; j++) {
+                entities.add(new Entity(models[0], new Position(i - 49.5f, -1, j - 49.5f)));
             }
         }
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                entities[100 + i * 10 + j] = new Entity(model, new Position(i - 4.5f, -5, j - 4.5f), new Rotation((float) Math.PI / 4, 0, 0));
-            }
-        }
-        entities[200] = new Entity(new Model(model.mesh(), new Material.Fill(Color.gray(0.5f), Color.gray(0.5f), Color.gray(0.5f), 1f)), new Position(0, 3, 0), Rotation.ZERO, new Scale(10, 0.1f, 10));
-        entities[201] = new Entity(new Model(model.mesh(), new Material.Fill(Color.WHITE, 100f)), new Position(4,4,4), Rotation.ZERO, new Scale(0.03f));
-        for (int i = 0; i < models.length; i++) {
-            entities[202 + i] = new Entity(models[i], new Position(0, -0.5f, 0));
-        }
-        // random
-        // for (int i = 0; i < 100; i++) {
-        //     entities[i] = new Entity(model, Position.fromVector(new float[]{(float) Math.random() * 10 - 5, (float) Math.random() * 10 - 5, (float) Math.random() * 10 - 5}), Rotation.random(), new Scale((float) Math.random() + 0.5f));
-        // }
-        return entities;
+        entities.add(new Entity(models[1], new Position(0, -0.5f, 0)));
+        entities.add(new Entity(models[2], new Position(10, 10, 10), new Rotation((float) Math.PI / 2, 0, 0), new Scale(0.01f)));
+        return entities.toArray(new Entity[0]);
     }
 
     public static void setRotationCallback(Window window, Rotation start, Rotation velocity, Consumer<Rotation> callback) {

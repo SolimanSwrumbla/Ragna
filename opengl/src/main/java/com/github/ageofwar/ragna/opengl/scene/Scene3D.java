@@ -32,11 +32,13 @@ public class Scene3D implements Scene {
 
     public void addEntities(Entity... entities) {
         for (Entity entity : entities) {
-            var glEntity = new GlEntity(entity, GlModels.get(entity.model()));
-            if (glEntity.model.isTransparent()) {
-                transparentEntities.add(glEntity);
-            } else {
-                solidEntities.add(glEntity);
+            for (var model : entity.model()) {
+                var glEntity = new GlEntity(entity, GlModels.get(model));
+                if (glEntity.model.isTransparent()) {
+                    transparentEntities.add(glEntity);
+                } else {
+                    solidEntities.add(glEntity);
+                }
             }
         }
         zSort(transparentEntities);
