@@ -42,8 +42,12 @@ public record GlShaderProgram(int id) implements AutoCloseable {
         glUniform1f(glGetUniformLocation(id, name), value);
     }
 
-    public void setUniform(String name, float[] value) {
+    public void setUniformMatrix(String name, float[] value) {
         glUniformMatrix4fv(glGetUniformLocation(id, name), true, value);
+    }
+
+    public void setUniformVector(String name, float[] value) {
+        glUniform3fv(glGetUniformLocation(id, name), value);
     }
 
     public void setUniform(String name, Color value) {

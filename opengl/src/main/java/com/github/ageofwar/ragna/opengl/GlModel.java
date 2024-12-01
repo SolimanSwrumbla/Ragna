@@ -108,6 +108,9 @@ public class GlModel implements AutoCloseable {
             @Override
             public void prerender(GlShaderProgram shaderProgram) {
                 shaderProgram.setUniform("material.ambient", fill.ambientColor());
+                shaderProgram.setUniform("material.diffuse", fill.diffuseColor());
+                shaderProgram.setUniform("material.specular", fill.specularColor());
+                shaderProgram.setUniform("material.reflectance", fill.reflectance());
             }
 
             @Override

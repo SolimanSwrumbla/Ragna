@@ -28,4 +28,13 @@ public record Position(float x, float y, float z) {
                 0, 0, 0, 1
         };
     }
+
+    public float[] oppositeMatrix() {
+        return new float[]{
+                1, 0, 0, -x,
+                0, 1, 0, -y,
+                0, 0, 1, -z,
+                0, 0, 0, 1
+        };
+    }
 }

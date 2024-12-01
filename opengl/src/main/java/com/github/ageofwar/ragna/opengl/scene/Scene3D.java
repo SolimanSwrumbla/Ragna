@@ -72,7 +72,8 @@ public class Scene3D implements Scene {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         var aspectRatio = window.aspectRatio();
-        shaderProgram.setUniform("projectionMatrix", camera.matrix(aspectRatio));
+        shaderProgram.setUniformMatrix("viewMatrix", camera.matrix(aspectRatio));
+        shaderProgram.setUniformVector("cameraPosition", camera.position().vector());
         shaderProgram.setUniform("ambientLightsSize", ambientLights.size());
         for (int i = 0; i < ambientLights.size(); i++) {
             shaderProgram.setUniform("ambientLights[" + i + "]", ambientLights.get(i));
@@ -121,7 +122,7 @@ public class Scene3D implements Scene {
 
     record GlEntity(Entity entity, GlModel model) {
         public void render(GlShaderProgram shaderProgram) {
-            shaderProgram.setUniform("modelMatrix", entity.transformMatrix());
+            shaderProgram.setUniformMatrix("modelMatrix", entity.transformMatrix());
             model.render(shaderProgram);
         }
     }

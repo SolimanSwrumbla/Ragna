@@ -35,26 +35,26 @@ public class MovementCallback implements LongConsumer {
         var direction = new float[3];
         var pitch = this.camera.get().rotation().pitch();
         if (upPressed && !downPressed) {
-            direction[0] += (float) Math.sin(pitch);
-            direction[2] += (float) Math.cos(pitch);
-        }
-        if (downPressed && !upPressed) {
             direction[0] -= (float) Math.sin(pitch);
             direction[2] -= (float) Math.cos(pitch);
         }
-        if (leftPressed && !rightPressed) {
-            direction[0] += (float) Math.sin(pitch + Math.PI / 2);
-            direction[2] += (float) Math.cos(pitch + Math.PI / 2);
+        if (downPressed && !upPressed) {
+            direction[0] += (float) Math.sin(pitch);
+            direction[2] += (float) Math.cos(pitch);
         }
-        if (rightPressed) {
+        if (leftPressed && !rightPressed) {
             direction[0] -= (float) Math.sin(pitch + Math.PI / 2);
             direction[2] -= (float) Math.cos(pitch + Math.PI / 2);
         }
-        if (spacePressed) {
-            direction[1] -= 1;
+        if (rightPressed && !leftPressed) {
+            direction[0] += (float) Math.sin(pitch + Math.PI / 2);
+            direction[2] += (float) Math.cos(pitch + Math.PI / 2);
         }
-        if (leftShiftPressed) {
+        if (spacePressed && !leftShiftPressed) {
             direction[1] += 1;
+        }
+        if (leftShiftPressed && !spacePressed) {
+            direction[1] -= 1;
         }
         if (!Vector.isZero(direction)) {
             direction = Vector.normalize(direction);

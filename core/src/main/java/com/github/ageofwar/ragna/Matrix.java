@@ -14,18 +14,18 @@ public final class Matrix {
     }
 
     public static float[] product(float[]... matrices) {
+        var result = new float[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         if (matrices.length == 0) {
-            return new float[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+            return result;
         }
-        float[] result = matrices[0];
-        for (int i = 1; i < matrices.length; i++) {
+        for (int i = 0; i < matrices.length; i++) {
             result = product(result, matrices[i]);
         }
         return result;
     }
 
     public static float[] product(float[] a, float[] b) {
-        float[] result = new float[16];
+        var result = new float[16];
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 result[i * 4 + j] = 0;
@@ -38,7 +38,7 @@ public final class Matrix {
     }
 
     public static float[] productWithVector(float[] matrix, float[] vector) {
-        float[] result = new float[4];
+        var result = new float[4];
         for (int i = 0; i < 4; i++) {
             result[i] = 0;
             for (int j = 0; j < 4; j++) {
@@ -49,7 +49,7 @@ public final class Matrix {
     }
 
     public static String toString(float[] matrix) {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 builder.append(matrix[i * 4 + j]).append(' ');

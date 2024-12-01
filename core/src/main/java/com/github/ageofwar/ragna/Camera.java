@@ -30,10 +30,10 @@ public record Camera(Position position, Rotation rotation, Projection projection
     }
 
     public float[] matrix(float aspectRatio) {
-        return Matrix.product(projection.matrix(aspectRatio), rotation.matrix(), position.matrix());
+        return Matrix.product(projection.matrix(aspectRatio), rotation.matrix(), position.oppositeMatrix());
     }
 
     public float[] viewMatrix() {
-        return Matrix.product(rotation.matrix(), position.matrix());
+        return Matrix.product(rotation.matrix(), position.oppositeMatrix());
     }
 }
