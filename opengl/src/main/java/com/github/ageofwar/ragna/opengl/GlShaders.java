@@ -3,8 +3,11 @@ package com.github.ageofwar.ragna.opengl;
 public class GlShaders {
     private static GlShader vertexShader3D;
     private static GlShader fragmentShader3D;
+    private static GlShader vertexShaderSkybox;
+    private static GlShader fragmentShaderSkybox;
 
     private static GlShaderProgram shaderProgram3D;
+    private static GlShaderProgram shaderProgramSkybox;
 
     private GlShaders() {
     }
@@ -33,6 +36,29 @@ public class GlShaders {
         return shaderProgram3D;
     }
 
+    public static GlShader getVertexShaderSkybox() {
+        if (vertexShaderSkybox == null) {
+            vertexShaderSkybox = GlShader.loadVertexFromResources("shaders/skybox.vert");
+        }
+        return vertexShaderSkybox;
+    }
+
+    public static GlShader getFragmentShaderSkybox() {
+        if (fragmentShaderSkybox == null) {
+            fragmentShaderSkybox = GlShader.loadFragmentFromResources("shaders/skybox.frag");
+        }
+        return fragmentShaderSkybox;
+    }
+
+    public static GlShaderProgram getShaderProgramSkybox() {
+        if (shaderProgramSkybox == null) {
+            shaderProgramSkybox = GlShaderProgram.create(getVertexShaderSkybox(), getFragmentShaderSkybox());
+            GlShaderProgram.bind(shaderProgramSkybox);
+            shaderProgramSkybox.setUniform("textureSampler", 0);
+        }
+        return shaderProgramSkybox;
+    }
+
     public static void close() {
         if (shaderProgram3D != null) {
             shaderProgram3D.close();
@@ -42,6 +68,15 @@ public class GlShaders {
         }
         if (fragmentShader3D != null) {
             fragmentShader3D.close();
+        }
+        if (shaderProgramSkybox != null) {
+            shaderProgramSkybox.close();
+        }
+        if (vertexShaderSkybox != null) {
+            vertexShaderSkybox.close();
+        }
+        if (fragmentShaderSkybox != null) {
+            fragmentShaderSkybox.close();
         }
     }
 }

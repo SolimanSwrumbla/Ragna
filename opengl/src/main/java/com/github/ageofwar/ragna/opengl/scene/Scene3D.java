@@ -12,42 +12,15 @@ import java.util.Comparator;
 import static org.lwjgl.opengl.GL30.*;
 
 public class Scene3D implements Scene {
-    private final ArrayList<GlEntity> solidEntities = new ArrayList<>();
-    private final ArrayList<GlEntity> transparentEntities = new ArrayList<>();
     private final ArrayList<Light.Ambient> ambientLights = new ArrayList<>();
     private final ArrayList<Light.Point> pointLights = new ArrayList<>();
     private final ArrayList<Light.Directional> directionalLights = new ArrayList<>();
-
+    private Content content;
     private Camera camera;
 
-    public static Scene3D withEntities(Camera camera, Entity... entities) {
-        var scene = new Scene3D(camera);
-        scene.addEntities(entities);
-        return scene;
-    }
-
-    public Scene3D(Camera camera) {
+    public Scene3D(Camera camera, Content content) {
         this.camera = camera;
-    }
-
-    public void addEntities(Entity... entities) {
-        for (Entity entity : entities) {
-            for (var model : entity.model()) {
-                var glEntity = new GlEntity(entity, GlModels.get(model));
-                if (glEntity.model.isTransparent()) {
-                    transparentEntities.add(glEntity);
-                } else {
-                    solidEntities.add(glEntity);
-                }
-            }
-        }
-        zSort(transparentEntities);
-    }
-
-    public void setEntities(Entity... entities) {
-        solidEntities.clear();
-        transparentEntities.clear();
-        addEntities(entities);
+        this.content = content;
     }
 
     public void addLights(Light... lights) {
@@ -64,44 +37,70 @@ public class Scene3D implements Scene {
 
     @Override
     public void render(Window window, long time) {
-        var shaderProgram = GlShaders.getShaderProgram3D();
-        GlShaderProgram.bind(shaderProgram);
+        var shaderProgramSkybox = GlShaders.getShaderProgramSkybox();
+        var shaderProgram3D = GlShaders.getShaderProgram3D();
+
+        var aspectRatio = window.aspectRatio();
+
+        GlShaderProgram.bind(shaderProgram3D);
+        shaderProgram3D.setUniformMatrix("viewMatrix", camera.matrix(aspectRatio));
+        shaderProgram3D.setUniformVector("cameraPosition", camera.position().vector());
+        shaderProgram3D.setUniform("ambientLightsSize", ambientLights.size());
+        for (int i = 0; i < ambientLights.size(); i++) {
+            shaderProgram3D.setUniform("ambientLights[" + i + "]", ambientLights.get(i));
+        }
+        shaderProgram3D.setUniform("directionalLightsSize", directionalLights.size());
+        for (int i = 0; i < directionalLights.size(); i++) {
+            shaderProgram3D.setUniform("directionalLights[" + i + "]", directionalLights.get(i));
+        }
+        shaderProgram3D.setUniform("pointLightsSize", pointLights.size());
+        for (int i = 0; i < pointLights.size(); i++) {
+            shaderProgram3D.setUniform("pointLights[" + i + "]", pointLights.get(i));
+        }
+
+        shaderProgram3D.setUniformMatrix("viewMatrix", camera.matrix(aspectRatio));
+
+        GlShaderProgram.bind(shaderProgramSkybox);
+        shaderProgramSkybox.setUniformMatrix("viewMatrix", camera.matrix(aspectRatio));
+
+        var solidEntities = new ArrayList<GlEntity>();
+        var transparentEntities = new ArrayList<GlEntity>();
+        entities(time, solidEntities, transparentEntities);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
-        glEnable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        var aspectRatio = window.aspectRatio();
-        shaderProgram.setUniformMatrix("viewMatrix", camera.matrix(aspectRatio));
-        shaderProgram.setUniformVector("cameraPosition", camera.position().vector());
-        shaderProgram.setUniform("ambientLightsSize", ambientLights.size());
-        for (int i = 0; i < ambientLights.size(); i++) {
-            shaderProgram.setUniform("ambientLights[" + i + "]", ambientLights.get(i));
-        }
-        shaderProgram.setUniform("directionalLightsSize", directionalLights.size());
-        for (int i = 0; i < directionalLights.size(); i++) {
-            shaderProgram.setUniform("directionalLights[" + i + "]", directionalLights.get(i));
-        }
-        shaderProgram.setUniform("pointLightsSize", pointLights.size());
-        for (int i = 0; i < pointLights.size(); i++) {
-            shaderProgram.setUniform("pointLights[" + i + "]", pointLights.get(i));
+        for (var entity : solidEntities) {
+            entity.render();
         }
 
-        glCullFace(GL_BACK);
-        for (var entity : solidEntities) {
-            entity.render(shaderProgram);
-        }
+        glEnable(GL_CULL_FACE);
         for (var entity : transparentEntities) {
             glCullFace(GL_FRONT);
-            entity.render(shaderProgram);
+            entity.render();
             glCullFace(GL_BACK);
-            entity.render(shaderProgram);
+            entity.render();
         }
     }
 
-    private void zSort(ArrayList<GlEntity> transparentEntities) {
+    private void entities(long time, ArrayList<GlEntity> solidEntities, ArrayList<GlEntity> transparentEntities) {
+        for (var entity : content.entities(camera, time)) {
+            for (var model : entity.model()) {
+                var glModel = GlModels.get(model);
+                if (glModel.isTransparent()) {
+                    transparentEntities.add(new GlEntity(entity, glModel));
+                } else {
+                    solidEntities.add(new GlEntity(entity, glModel));
+                }
+            }
+        }
+        depthSort(transparentEntities);
+    }
+
+    private void depthSort(ArrayList<GlEntity> transparentEntities) {
         transparentEntities.sort(Comparator.comparing(entity -> -Vector.norm(Matrix.productWithVector(Matrix.product(camera.viewMatrix()), entity.entity.position().vectorUniform()))));
     }
 
@@ -111,7 +110,6 @@ public class Scene3D implements Scene {
 
     public void setCamera(Camera camera) {
         this.camera = camera;
-        zSort(transparentEntities);
     }
 
     public void setCameraPosition(Position position) {
@@ -122,10 +120,14 @@ public class Scene3D implements Scene {
         setCamera(camera.withRotation(rotation));
     }
 
-    record GlEntity(Entity entity, GlModel model) {
-        public void render(GlShaderProgram shaderProgram) {
-            shaderProgram.setUniformMatrix("modelMatrix", entity.transformMatrix());
-            model.render(shaderProgram);
+    private record GlEntity(Entity entity, GlModel model) {
+        public void render() {
+            model.render(entity.transformMatrix());
         }
+    }
+
+    @FunctionalInterface
+    public interface Content {
+        Iterable<Entity> entities(Camera camera, long time);
     }
 }

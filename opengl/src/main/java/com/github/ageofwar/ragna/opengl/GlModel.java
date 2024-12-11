@@ -59,9 +59,9 @@ public class GlModel implements AutoCloseable {
         this.material = material;
     }
 
-    public void render(GlShaderProgram shaderProgram) {
+    public void render(float[] transformMatrix) {
         glBindVertexArray(objectId);
-        material.prerender(shaderProgram);
+        material.prerender(transformMatrix);
         glDrawElements(GL_TRIANGLES, vertices, GL_UNSIGNED_INT, 0);
     }
 
@@ -86,11 +86,14 @@ public class GlModel implements AutoCloseable {
             if (material instanceof com.github.ageofwar.ragna.Material.Texture texture) {
                 return new Texture(texture);
             }
+            if (material instanceof com.github.ageofwar.ragna.Material.SkyBox skyBox) {
+                return new SkyBox(skyBox);
+            }
             throw new IllegalArgumentException();
         }
 
         void create(Model model);
-        void prerender(GlShaderProgram shaderProgram);
+        void prerender(float[] transformMatrix);
         void close();
         boolean isTransparent();
 
@@ -106,7 +109,10 @@ public class GlModel implements AutoCloseable {
             }
 
             @Override
-            public void prerender(GlShaderProgram shaderProgram) {
+            public void prerender(float[] transformMatrix) {
+                var shaderProgram = GlShaders.getShaderProgram3D();
+                GlShaderProgram.bind(shaderProgram);
+                shaderProgram.setUniformMatrix("modelMatrix", transformMatrix);
                 shaderProgram.setUniform("material.ambient", fill.ambientColor());
                 shaderProgram.setUniform("material.diffuse", fill.diffuseColor());
                 shaderProgram.setUniform("material.specular", fill.specularColor());
@@ -174,12 +180,87 @@ public class GlModel implements AutoCloseable {
             }
 
             @Override
-            public void prerender(GlShaderProgram shaderProgram) {
+            public void prerender(float[] transformMatrix) {
+                var shaderProgram = GlShaders.getShaderProgram3D();
+                GlShaderProgram.bind(shaderProgram);
                 glBindTexture(GL_TEXTURE_2D, textureId);
+                shaderProgram.setUniformMatrix("modelMatrix", transformMatrix);
                 shaderProgram.setUniform("material.ambient", texture.ambientColor());
                 shaderProgram.setUniform("material.diffuse", texture.diffuseColor());
                 shaderProgram.setUniform("material.specular", texture.specularColor());
                 shaderProgram.setUniform("material.reflectance", texture.reflectance());
+            }
+
+            @Override
+            public void close() {
+                glDeleteBuffers(textureBufferId);
+                glDeleteTextures(textureId);
+            }
+
+            @Override
+            public boolean isTransparent() {
+                return false;
+            }
+        }
+
+        class SkyBox implements Material {
+            private final com.github.ageofwar.ragna.Material.SkyBox skyBox;
+            private int textureId;
+            private int textureBufferId;
+
+            public SkyBox(com.github.ageofwar.ragna.Material.SkyBox skyBox) {
+                this.skyBox = skyBox;
+            }
+
+            @Override
+            public void create(Model model) {
+                try (var stack = MemoryStack.stackPush()) {
+                    var widthBuffer = stack.mallocInt(1);
+                    var heightBuffer = stack.mallocInt(1);
+                    var channels = stack.mallocInt(1);
+
+                    var buffer = load(widthBuffer, heightBuffer, channels);
+                    if (buffer == null) {
+                        throw new RuntimeException("Failed to load texture file: " + stbi_failure_reason());
+                    }
+                    var width = widthBuffer.get();
+                    var height = heightBuffer.get();
+
+                    createTexture(width, height, buffer);
+
+                    stbi_image_free(buffer);
+
+                    textureBufferId = glGenBuffers();
+                    glBindBuffer(GL_ARRAY_BUFFER, textureBufferId);
+                    glBufferData(GL_ARRAY_BUFFER, skyBox.textureCoordinates(), GL_STATIC_DRAW);
+                    glEnableVertexAttribArray(1);
+                    glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+                    glBindBuffer(GL_ARRAY_BUFFER, 0);
+                }
+            }
+
+            private void createTexture(int width, int height, ByteBuffer buffer) {
+                textureId = glGenTextures();
+                glBindTexture(GL_TEXTURE_2D, textureId);
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
+
+            private ByteBuffer load(IntBuffer widthBuffer, IntBuffer heightBuffer, IntBuffer channels) {
+                return stbi_load(skyBox.texturePath(), widthBuffer, heightBuffer, channels, 4);
+            }
+
+            @Override
+            public void prerender(float[] transformMatrix) {
+                var shaderProgram = GlShaders.getShaderProgramSkybox();
+                GlShaderProgram.bind(shaderProgram);
+                glBindTexture(GL_TEXTURE_2D, textureId);
+                shaderProgram.setUniformMatrix("modelMatrix", transformMatrix);
+                shaderProgram.setUniformRGB("color", skyBox.color());
+                shaderProgram.setUniform("intensity", skyBox.intensity());
             }
 
             @Override

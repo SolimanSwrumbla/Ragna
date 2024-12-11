@@ -6,8 +6,13 @@ import com.github.ageofwar.ragna.Light;
 import static org.lwjgl.opengl.GL30.*;
 
 public record GlShaderProgram(int id) implements AutoCloseable {
+    private static int currentProgram = 0;
+
     public static void bind(GlShaderProgram program) {
-        glUseProgram(program.id);
+        if (currentProgram != program.id) {
+            glUseProgram(program.id);
+            currentProgram = program.id;
+        }
     }
 
     public static void unbind() {
@@ -52,6 +57,10 @@ public record GlShaderProgram(int id) implements AutoCloseable {
 
     public void setUniform(String name, Color value) {
         glUniform4f(glGetUniformLocation(id, name), value.red(), value.green(), value.blue(), value.alpha());
+    }
+
+    public void setUniformRGB(String name, Color value) {
+        glUniform3f(glGetUniformLocation(id, name), value.red(), value.green(), value.blue());
     }
 
     public void setUniform(String name, Light.Ambient value) {

@@ -121,12 +121,14 @@ vec4 diffuseColor(DirectionalLight light, vec4 color, vec3 normal) {
 }
 
 vec4 diffuseColor(PointLight light, vec4 color, vec3 normal, vec3 position) {
-    vec3 toLight = light.position - position;
-    vec3 lightDirection = normalize(toLight);
-    float distance = length(toLight);
+    DirectionalLight dl;
+    vec3 lightToPositionDirection = position - light.position;
+    dl.direction = normalize(lightToPositionDirection);
+    dl.color = light.color;
+    float distance = length(lightToPositionDirection);
     float attenuation = light.attenuation.constant + light.attenuation.linear * distance + light.attenuation.quadratic * distance * distance;
-    float intensity = light.intensity / max(attenuation, 1e-6);
-    return color * vec4(light.color, 1.0) * intensity * max(dot(normal, lightDirection), 0.0);
+    dl.intensity = light.intensity / max(attenuation, 1e-6);
+    return diffuseColor(dl, color, normal);
 }
 
 vec4 specularColor(DirectionalLight light, vec4 color, float reflectance, vec3 normal, vec3 position) {
