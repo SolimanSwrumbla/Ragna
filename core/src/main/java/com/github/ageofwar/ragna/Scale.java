@@ -16,4 +16,13 @@ public record Scale(float x, float y, float z) {
                 0, 0, 0, 1
         };
     }
+
+    public float[] inverseMatrix() {
+        return new float[] {
+                1 / x, 0, 0, 0,
+                0, 1 / y, 0, 0,
+                0, 0, 1 / z, 0,
+                0, 0, 0, 1
+        };
+    }
 }

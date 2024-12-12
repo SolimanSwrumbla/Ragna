@@ -3,7 +3,6 @@ package com.github.ageofwar.ragna.opengl;
 import com.github.ageofwar.ragna.Engine;
 import com.github.ageofwar.ragna.Window;
 import com.github.ageofwar.ragna.WindowConfiguration;
-import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
 import java.util.ArrayList;
@@ -174,7 +173,7 @@ public class GlEngine implements Engine {
             }
 
             @Override
-            public long getDelay(@NotNull TimeUnit unit) {
+            public long getDelay(TimeUnit unit) {
                 return unit.convert(time - System.nanoTime(), TimeUnit.NANOSECONDS);
             }
 
@@ -199,7 +198,7 @@ public class GlEngine implements Engine {
             }
 
             @Override
-            public T get(long timeout, @NotNull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
                 return task.get(timeout, unit);
             }
 

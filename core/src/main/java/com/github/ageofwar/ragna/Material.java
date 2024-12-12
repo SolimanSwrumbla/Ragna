@@ -1,9 +1,9 @@
 package com.github.ageofwar.ragna;
 
 public sealed interface Material permits Material.Fill, Material.Texture, Material.SkyBox {
-    record Fill(Color ambientColor, Color diffuseColor, Color specularColor, float reflectance) implements Material {
+    record Fill(Color ambientColor, Color diffuseColor, Color specularColor, float reflectance, Color emissiveColor) implements Material {
         public Fill(Color color, float reflectance) {
-            this(color, color, color, reflectance);
+            this(color, color, color, reflectance, Color.BLACK);
         }
 
         public Fill(Color color) {
@@ -11,9 +11,9 @@ public sealed interface Material permits Material.Fill, Material.Texture, Materi
         }
     }
 
-    record Texture(String path, float[] coordinates, Color ambientColor, Color diffuseColor, Color specularColor, float reflectance) implements Material {
+    record Texture(String path, float[] coordinates, Color ambientColor, Color diffuseColor, Color specularColor, float reflectance, Color emissiveColor) implements Material {
         public Texture(String path, float[] coordinates) {
-            this(path, coordinates, Color.BLACK, Color.BLACK, Color.BLACK, 0);
+            this(path, coordinates, Color.BLACK, Color.BLACK, Color.BLACK, 0, Color.BLACK);
         }
     }
 

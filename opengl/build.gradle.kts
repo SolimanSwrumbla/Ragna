@@ -29,22 +29,9 @@ dependencies {
     lwjgl {
         version = Release.latest
         implementation(Lwjgl.Preset.minimalOpenGL)
-        implementation(Lwjgl.Addons.`joml 1․10․7`)
     }
 }
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks.jar {
-    dependsOn(configurations.runtimeClasspath)
-
-    duplicatesStrategy = DuplicatesStrategy.WARN
-
-    manifest {
-        attributes(mapOf("Main-Class" to application.mainClass))
-    }
-
-    from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
 }

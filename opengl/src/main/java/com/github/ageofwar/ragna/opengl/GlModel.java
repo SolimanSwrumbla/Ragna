@@ -116,6 +116,7 @@ public class GlModel implements AutoCloseable {
                 shaderProgram.setUniform("material.ambient", fill.ambientColor());
                 shaderProgram.setUniform("material.diffuse", fill.diffuseColor());
                 shaderProgram.setUniform("material.specular", fill.specularColor());
+                shaderProgram.setUniform("material.emissive", fill.emissiveColor());
                 shaderProgram.setUniform("material.reflectance", fill.reflectance());
             }
 
@@ -188,6 +189,7 @@ public class GlModel implements AutoCloseable {
                 shaderProgram.setUniform("material.ambient", texture.ambientColor());
                 shaderProgram.setUniform("material.diffuse", texture.diffuseColor());
                 shaderProgram.setUniform("material.specular", texture.specularColor());
+                shaderProgram.setUniform("material.emissive", texture.emissiveColor());
                 shaderProgram.setUniform("material.reflectance", texture.reflectance());
             }
 

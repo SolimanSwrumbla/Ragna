@@ -40,6 +40,7 @@ public class ModelLoader {
                 models[i] = new Model(mesh, material);
             }
         }
+
         return models;
     }
 
@@ -109,6 +110,7 @@ public class ModelLoader {
         float[] ambientColor = new float[4];
         float[] diffuseColor = new float[4];
         float[] specularColor = new float[4];
+        float[] emissiveColor = new float[4];
         String texture = null;
         try (var stack = MemoryStack.stackPush()) {
             var color = AIColor4D.create();
@@ -128,6 +130,11 @@ public class ModelLoader {
                 specularColor = new float[] { color.r(), color.g(), color.b(), color.a() };
             }
 
+            result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_EMISSIVE, aiTextureType_NONE, 0, color);
+            if (result == aiReturn_SUCCESS) {
+                emissiveColor = new float[] { color.r(), color.g(), color.b(), color.a() };
+            }
+
             var reflectance = new float[1];
             aiGetMaterialFloatArray(aiMaterial, AI_MATKEY_SHININESS_STRENGTH, aiTextureType_NONE, 0, reflectance, new int[] { 1 });
 
@@ -145,8 +152,8 @@ public class ModelLoader {
                 }
             }
 
-            if (texture != null) return new Material.Texture(texture, textCoords, Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0]);
-            return new Material.Fill(Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0]);
+            if (texture != null) return new Material.Texture(texture, textCoords, Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0], Color.rgba(emissiveColor));
+            return new Material.Fill(Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0], Color.rgba(emissiveColor));
         }
     }
 

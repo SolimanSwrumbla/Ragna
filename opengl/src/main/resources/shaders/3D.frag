@@ -15,6 +15,7 @@ struct Material
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
+    vec4 emissive;
     float reflectance;
 };
 
@@ -109,7 +110,7 @@ void main()
         }
     }
 
-    fragColor = ambientComponent + diffuseComponent + specularComponent;
+    fragColor = ambientComponent + diffuseComponent + specularComponent + material.emissive;
 }
 
 vec4 ambientColor(AmbientLight light, vec4 color) {

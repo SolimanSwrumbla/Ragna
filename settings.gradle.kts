@@ -1,3 +1,3 @@
 rootProject.name = "Ragna"
-include("core", "opengl", "vulkan")
+include("core", "opengl", "example")
 
