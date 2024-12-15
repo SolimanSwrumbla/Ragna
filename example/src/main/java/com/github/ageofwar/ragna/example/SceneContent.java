@@ -3,10 +3,12 @@ package com.github.ageofwar.ragna.example;
 import com.github.ageofwar.ragna.*;
 import com.github.ageofwar.ragna.opengl.scene.Scene3D;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_H;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class SceneContent implements Scene3D.Content {
     private static final Model[] skybox = Model.skybox(ModelLoader.load("assets/skybox/model.obj"), 0.5f);
@@ -30,6 +32,9 @@ public class SceneContent implements Scene3D.Content {
     };
     private long startSimulationTime = System.nanoTime();
     private float nearestPlanetDistance = Float.MAX_VALUE;
+    private long lastTime = startSimulationTime;
+    private boolean paused = false;
+
 
     public SceneContent(Window window) {
         this.window = window;
@@ -37,22 +42,26 @@ public class SceneContent implements Scene3D.Content {
 
     @Override
     public Iterable<Entity> entities(Camera camera, long time) {
+        window.setTitle(windowTitle());
         if (window.isKeyPressed(GLFW_KEY_R)) startSimulationTime = System.nanoTime();
+        if (!paused) {
+            lastTime = time;
+        }
         nearestPlanetDistance = Float.MAX_VALUE;
-        var helpMode = helpMode();
+        var helpMode = window.isKeyPressed(GLFW_KEY_H);
         var entities = new ArrayList<Entity>();
 
         for (var planet : planets) {
-            var position = planet.position(time - startSimulationTime);
+            var position = planet.position(lastTime - startSimulationTime);
 
             var virtualPosition = position.scale(1e-6f);
             var virtualRadius = planet.radius() * 1e-6f;
             nearestPlanetDistance = Math.min(nearestPlanetDistance, camera.position().distance(virtualPosition) - planet.radius() * 1e-6f);
             if (virtualPosition.distance(camera.position()) > SKYBOX_SIZE) {
-                virtualRadius = virtualRadius * SKYBOX_SIZE / camera.position().distance(virtualPosition);
+                if (!helpMode) virtualRadius = virtualRadius * SKYBOX_SIZE / camera.position().distance(virtualPosition);
                 virtualPosition = camera.position().add(camera.position().directionTo(virtualPosition), SKYBOX_SIZE);
             }
-            virtualRadius = Math.max(virtualRadius,  helpMode ? FAR_PLANET_RADIUS * 5 : FAR_PLANET_RADIUS);
+            virtualRadius = Math.max(virtualRadius, FAR_PLANET_RADIUS);
             entities.add(new Entity(helpMode ? helpModel(planet) : planet.model(), virtualPosition, Rotation.ZERO, new Scale(virtualRadius)));
         }
 
@@ -60,15 +69,27 @@ public class SceneContent implements Scene3D.Content {
         return entities;
     }
 
+    public void setCallbacks() {
+        window.setKeyCallback((key, scancode, action, mods) -> {
+            if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE) {
+                paused = !paused;
+                if (!paused) {
+                    startSimulationTime += System.nanoTime() - lastTime;
+                }
+            }
+        });
+    }
+
     public float getNearestPlanetDistance() {
         return nearestPlanetDistance;
     }
 
-    private boolean helpMode() {
-        return window.isKeyPressed(GLFW_KEY_H);
-    }
-
     public Model[] helpModel(Planet planet) {
         return new Model[] { new Model(point, new Material.Fill(planet.color())) };
+    }
+
+    private String windowTitle() {
+        var time = Instant.ofEpochMilli((lastTime - startSimulationTime) / 1_000_000 * 60 * 60 * 24);
+        return time.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 }

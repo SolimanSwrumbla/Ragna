@@ -194,6 +194,11 @@ public class GlWindow implements Window {
     }
 
     @Override
+    public void setTitle(String title) {
+        glfwSetWindowTitle(id, title);
+    }
+
+    @Override
     public Engine engine() {
         return engine;
     }

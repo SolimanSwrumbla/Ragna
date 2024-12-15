@@ -12,6 +12,7 @@ public interface Window {
     CursorPosition cursorPositionRelative();
     void skipFrame();
     void setVSync(boolean vSync);
+    void setTitle(String title);
 
     void setCloseCallback(Runnable callback);
     void setKeyCallback(KeyCallback callback);

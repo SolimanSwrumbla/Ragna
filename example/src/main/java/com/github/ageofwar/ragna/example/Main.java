@@ -13,7 +13,7 @@ public class Main {
 
     public static void main(String[] args) {
         var mainThread = Thread.currentThread();
-        var windowConfiguration = new WindowConfiguration("2025-01-01", 800, 800);
+        var windowConfiguration = new WindowConfiguration("Hello World!", 800, 800);
         try (var engine = GlEngine.create()) {
             var window = engine.createWindow(windowConfiguration);
             window.setScene(setupScene(window));
@@ -32,6 +32,7 @@ public class Main {
         );
         setRotationCallback(window, camera.rotation(), new Rotation(4, 4, 4), scene::setCameraRotation);
         setMovementCallback(window, camera.position(), () -> getCameraVelocity(content.getNearestPlanetDistance()), Math.floorDiv(1000000000L, IPS), scene::getCamera, scene::setCameraPosition);
+        content.setCallbacks();
         //return new DebugScene(scene);
         return scene;
     }
