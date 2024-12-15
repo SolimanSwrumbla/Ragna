@@ -101,7 +101,7 @@ public class Scene3D implements Scene {
     }
 
     private void depthSort(ArrayList<GlEntity> transparentEntities) {
-        transparentEntities.sort(Comparator.comparing(entity -> -Vector.norm(Matrix.productWithVector(Matrix.product(camera.viewMatrix()), entity.entity.position().vectorUniform()))));
+        transparentEntities.sort(Comparator.comparing(entity -> -Vector.length(Matrix.productWithVector(Matrix.product(camera.viewMatrix()), entity.entity.position().vectorUniform()))));
     }
 
     public Camera getCamera() {

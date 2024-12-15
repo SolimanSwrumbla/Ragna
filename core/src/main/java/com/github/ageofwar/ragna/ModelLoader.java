@@ -21,7 +21,7 @@ public class ModelLoader {
     private static Model[] load(String mesh, int flags) {
         try (var scene = aiImportFile(mesh, flags)) {
             if (scene == null) {
-                throw new RuntimeException("Error loading model [resource: " + mesh + "]");
+                throw new RuntimeException("Error loading model [resource: " + mesh + "]: " + aiGetErrorString());
             }
             var modelDir = mesh.substring(0, mesh.lastIndexOf('/') + 1);
             return load(scene, modelDir);

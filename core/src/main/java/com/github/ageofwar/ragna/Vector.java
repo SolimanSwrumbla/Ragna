@@ -30,7 +30,19 @@ public class Vector {
         return vector[0] == 0 && vector[1] == 0 && vector[2] == 0;
     }
 
-    public static float norm(float[] vector) {
+    public static float length(float[] vector) {
         return  (float) Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+    }
+
+    public static float squaredLength(float[] vector) {
+        return vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2];
+    }
+
+    public static float[] add(float[] vector1, float[] vector2) {
+        return new float[] { vector1[0] + vector2[0], vector1[1] + vector2[1], vector1[2] + vector2[2] };
+    }
+
+    public static float[] subtract(float[] vector1, float[] vector2) {
+        return new float[] { vector1[0] - vector2[0], vector1[1] - vector2[1], vector1[2] - vector2[2] };
     }
 }

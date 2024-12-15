@@ -2,12 +2,8 @@ package com.github.ageofwar.ragna;
 
 public sealed interface Material permits Material.Fill, Material.Texture, Material.SkyBox {
     record Fill(Color ambientColor, Color diffuseColor, Color specularColor, float reflectance, Color emissiveColor) implements Material {
-        public Fill(Color color, float reflectance) {
-            this(color, color, color, reflectance, Color.BLACK);
-        }
-
         public Fill(Color color) {
-            this(color, 0);
+            this(Color.TRANSPARENT, Color.TRANSPARENT, Color.TRANSPARENT, 0, color);
         }
     }
 

@@ -39,6 +39,21 @@ public record Rotation(float roll, float pitch, float yaw) {
         float cosYaw = (float) Math.cos(yaw);
         float sinYaw = (float) Math.sin(yaw);
         return new float[]{
+                cosPitch * cosYaw, sinRoll * sinPitch * cosYaw - cosRoll * sinYaw, cosRoll * sinPitch * cosYaw + sinRoll * sinYaw, 0,
+                cosPitch * sinYaw, sinRoll * sinPitch * sinYaw + cosRoll * cosYaw, cosRoll * sinPitch * sinYaw - sinRoll * cosYaw, 0,
+                -sinPitch, sinRoll * cosPitch, cosRoll * cosPitch, 0,
+                0, 0, 0, 1
+        };
+    }
+
+    public float[] oppositeMatrix() {
+        float cosRoll = (float) Math.cos(roll);
+        float sinRoll = (float) Math.sin(roll);
+        float cosPitch = (float) Math.cos(pitch);
+        float sinPitch = (float) Math.sin(pitch);
+        float cosYaw = (float) Math.cos(yaw);
+        float sinYaw = (float) Math.sin(yaw);
+        return new float[]{
                 cosPitch * cosYaw, cosPitch * sinYaw, -sinPitch, 0,
                 sinRoll * sinPitch * cosYaw - cosRoll * sinYaw, sinRoll * sinPitch * sinYaw + cosRoll * cosYaw, sinRoll * cosPitch, 0,
                 cosRoll * sinPitch * cosYaw + sinRoll * sinYaw, cosRoll * sinPitch * sinYaw - sinRoll * cosYaw, cosRoll * cosPitch, 0,
@@ -46,15 +61,7 @@ public record Rotation(float roll, float pitch, float yaw) {
         };
     }
 
-    public float[] vector() {
-        float cosPitch = (float) Math.cos(pitch);
-        float sinPitch = (float) Math.sin(pitch);
-        float cosYaw = (float) Math.cos(yaw);
-        float sinYaw = (float) Math.sin(yaw);
-        return new float[]{
-                cosPitch * sinYaw,
-                sinPitch,
-                cosPitch * cosYaw,
-        };
+    public Direction direction(Direction relativeDirection) {
+        return Direction.fromVector(Matrix.productWithVector(matrix(), relativeDirection.vectorUniform()));
     }
 }

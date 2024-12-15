@@ -20,20 +20,12 @@ public record Position(float x, float y, float z) {
         return new Position(x + position.x, y + position.y, z + position.z);
     }
 
-    public Position addX(float x) {
-        return new Position(this.x + x, y, z);
-    }
-
-    public Position addY(float y) {
-        return new Position(x, this.y + y, z);
-    }
-
-    public Position addZ(float z) {
-        return new Position(x, y, this.z + z);
-    }
-
     public Position add(Direction direction, float distance) {
         return new Position(x + direction.x() * distance, y + direction.y() * distance, z + direction.z() * distance);
+    }
+
+    public Position subtract(Position position) {
+        return new Position(x - position.x, y - position.y, z - position.z);
     }
 
     public float distance(Position position) {
@@ -42,6 +34,14 @@ public record Position(float x, float y, float z) {
 
     public Direction directionTo(Position position) {
         return new Direction(position.x - x, position.y - y, position.z - z);
+    }
+
+    public Position scale(float factor) {
+        return new Position(x * factor, y * factor, z * factor);
+    }
+
+    public Position rotate(Rotation rotation) {
+        return Position.fromVector(Matrix.productWithVector(rotation.matrix(), vectorUniform()));
     }
 
     public float[] matrix() {

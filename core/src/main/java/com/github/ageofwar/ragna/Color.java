@@ -10,6 +10,7 @@ public final class Color {
 
     public static final Color WHITE = rgb(1, 1, 1);
     public static final Color BLACK = rgb(0, 0, 0);
+    public static final Color GRAY = rgb(0.5f, 0.5f, 0.5f);
     public static final Color RED = rgb(1, 0, 0);
     public static final Color GREEN = rgb(0, 1, 0);
     public static final Color BLUE = rgb(0, 0, 1);
@@ -17,6 +18,7 @@ public final class Color {
     public static final Color CYAN = rgb(0, 1, 1);
     public static final Color MAGENTA = rgb(1, 0, 1);
     public static final Color TRANSPARENT = rgba(0, 0, 0, 0);
+    public static final Color ORANGE = rgb(1, 0.5f, 0);
 
     public static Color rgba(float[] rgba) {
         return rgba(rgba[0], rgba[1], rgba[2], rgba[3]);
