@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class SceneContent implements Scene3D.Content {
-    private static final Model[] skybox = Model.skybox(ModelLoader.load("assets/skybox/model.obj"), 0.5f);
+    private static final Model[] skybox = ModelLoader.load("assets/skybox/model.obj");
     private static final Mesh point = ModelLoader.load("assets/point/sphere.obj")[0].mesh();
 
     private static final float SKYBOX_SIZE = 100;
@@ -85,11 +85,15 @@ public class SceneContent implements Scene3D.Content {
     }
 
     public Model[] helpModel(Planet planet) {
-        return new Model[] { new Model(point, new Material.Fill(planet.color())) };
+        return new Model[] { new Model(point, new Material.Fill(new Material.Emissive(planet.color()))) };
     }
 
     private String windowTitle() {
         var time = Instant.ofEpochMilli((lastTime - startSimulationTime) / 1_000_000 * 60 * 60 * 24);
-        return time.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        var title = time.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        if (paused) {
+            title += " (paused)";
+        }
+        return title;
     }
 }

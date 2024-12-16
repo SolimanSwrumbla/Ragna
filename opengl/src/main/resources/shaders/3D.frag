@@ -1,14 +1,19 @@
 #version 450
 
 in vec3 outPosition;
-in vec2 outTexturePos;
+in vec2 outAmbientTexture;
+in vec2 outDiffuseTexture;
+in vec2 outSpecularTexture;
+in vec2 outEmissiveTexture;
 in vec3 outNormal;
 
 out vec4 fragColor;
 
 uniform mat4 projectionMatrix;
-uniform sampler2D textureSampler;
-uniform float specularPower;
+uniform sampler2D ambientTextureSampler;
+uniform sampler2D diffuseTextureSampler;
+uniform sampler2D specularTextureSampler;
+uniform sampler2D emissiveTextureSampler;
 
 struct Material
 {
@@ -17,6 +22,7 @@ struct Material
     vec4 specular;
     vec4 emissive;
     float reflectance;
+    float specularPower;
 };
 
 struct Attenuation
@@ -65,19 +71,22 @@ uniform PointLight pointLights[100];
 vec4 ambientColor(AmbientLight light, vec4 ambient);
 vec4 diffuseColor(DirectionalLight light, vec4 color, vec3 normal);
 vec4 diffuseColor(PointLight light, vec4 color, vec3 normal, vec3 position);
-vec4 specularColor(DirectionalLight light, vec4 color, float reflectance, vec3 normal, vec3 position);
-vec4 specularColor(PointLight light, vec4 color, float reflectance, vec3 normal, vec3 position);
+vec4 specularColor(DirectionalLight light, vec4 color, float reflectance, float specularPower, vec3 normal, vec3 position);
+vec4 specularColor(PointLight light, vec4 color, float reflectance, float specularPower, vec3 normal, vec3 position);
+vec4 color(sampler2D textureSampler, vec2 textureCoords, vec4 color);
 
 void main()
 {
-    vec4 textureColor = (outTexturePos.x > -0.1 || outTexturePos.y > -0.1) ?
-        texture(textureSampler, outTexturePos) :
+    vec4 textureColor = (outDiffuseTexture.x > -0.1 || outDiffuseTexture.y > -0.1) ?
+        texture(diffuseTextureSampler, outDiffuseTexture) :
         vec4(0,0,0,0);
 
-    vec4 ambient = material.ambient + textureColor;
-    vec4 diffuse = material.diffuse + textureColor;
-    vec4 specular = material.specular + textureColor;
+    vec4 ambient = color(ambientTextureSampler, outAmbientTexture, material.ambient);
+    vec4 diffuse = color(diffuseTextureSampler, outDiffuseTexture, material.diffuse);
+    vec4 specular = color(specularTextureSampler, outSpecularTexture, material.specular);
+    vec4 emissive = color(emissiveTextureSampler, outEmissiveTexture, material.emissive);
     float reflectance = material.reflectance;
+    float specularPower = material.specularPower;
 
     vec4 ambientComponent = vec4(0,0,0,1);
     for (int i = 0; i < ambientLightsSize; i++) {
@@ -101,16 +110,16 @@ void main()
     vec4 specularComponent = vec4(0,0,0,1);
     for (int i = 0; i < directionalLightsSize; i++) {
         if (directionalLights[i].intensity > 0) {
-            specularComponent += specularColor(directionalLights[i], specular, reflectance, outNormal, outPosition);
+            specularComponent += specularColor(directionalLights[i], specular, reflectance, specularPower, outNormal, outPosition);
         }
     }
     for (int i = 0; i < pointLightsSize; i++) {
         if (pointLights[i].intensity > 0) {
-            specularComponent += specularColor(pointLights[i], specular, reflectance, outNormal, outPosition);
+            specularComponent += specularColor(pointLights[i], specular, reflectance, specularPower, outNormal, outPosition);
         }
     }
 
-    fragColor = ambientComponent + diffuseComponent + specularComponent + material.emissive;
+    fragColor = ambientComponent + diffuseComponent + specularComponent + emissive;
 }
 
 vec4 ambientColor(AmbientLight light, vec4 color) {
@@ -132,17 +141,24 @@ vec4 diffuseColor(PointLight light, vec4 color, vec3 normal, vec3 position) {
     return diffuseColor(dl, color, normal);
 }
 
-vec4 specularColor(DirectionalLight light, vec4 color, float reflectance, vec3 normal, vec3 position) {
+vec4 specularColor(DirectionalLight light, vec4 color, float reflectance, float specularPower, vec3 normal, vec3 position) {
     vec3 positionCameraDirection = normalize(cameraPosition - position);
     vec3 reflectedDirection = reflect(light.direction, normal);
     float specularFactor = pow(max(dot(reflectedDirection, positionCameraDirection), 0.0), specularPower);
     return color * vec4(light.color, 1.0) * light.intensity * specularFactor * reflectance;
 }
 
-vec4 specularColor(PointLight light, vec4 color, float reflectance, vec3 normal, vec3 position) {
+vec4 specularColor(PointLight light, vec4 color, float reflectance, float specularPower, vec3 normal, vec3 position) {
     DirectionalLight dl;
     dl.direction = normalize(position - light.position);
     dl.color = light.color;
     dl.intensity = light.intensity;
-    return specularColor(dl, color, reflectance, normal, position);
+    return specularColor(dl, color, reflectance, specularPower, normal, position);
+}
+
+vec4 color(sampler2D textureSampler, vec2 textureCoords, vec4 color) {
+    vec4 textureColor = (textureCoords.x > -0.1 || textureCoords.y > -0.1) ?
+        texture(textureSampler, textureCoords) :
+        vec4(0,0,0,0);
+    return color + textureColor;
 }

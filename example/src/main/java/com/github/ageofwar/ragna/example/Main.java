@@ -27,7 +27,7 @@ public class Main {
         var content = new SceneContent(window);
         var scene = new Scene3D(camera, content);
         scene.addLights(
-                new Light.Ambient(Color.WHITE, 0.03f),
+                new Light.Ambient(Color.WHITE, 0.02f),
                 new Light.Point(Position.ORIGIN, Color.WHITE, 1f, new Light.Attenuation(0, 0.02f, 0))
         );
         setRotationCallback(window, camera.rotation(), new Rotation(4, 4, 4), scene::setCameraRotation);

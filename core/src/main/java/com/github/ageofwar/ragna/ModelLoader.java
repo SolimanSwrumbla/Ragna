@@ -111,49 +111,87 @@ public class ModelLoader {
         float[] diffuseColor = new float[4];
         float[] specularColor = new float[4];
         float[] emissiveColor = new float[4];
-        String texture = null;
+        String ambientTexture = null;
+        String diffuseTexture = null;
+        String specularTexture = null;
+        String emissiveTexture = null;
         try (var stack = MemoryStack.stackPush()) {
             var color = AIColor4D.create();
 
             int result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_AMBIENT, aiTextureType_NONE, 0, color);
             if (result == aiReturn_SUCCESS) {
                 ambientColor = new float[] { color.r(), color.g(), color.b(), color.a() };
+            } else {
+                ambientColor = new float[] { 0f, 0f, 0f, 1 };
             }
 
             result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0, color);
             if (result == aiReturn_SUCCESS) {
                 diffuseColor = new float[] { color.r(), color.g(), color.b(), color.a() };
+            } else {
+                diffuseColor = new float[] { 0f, 0f, 0f, 1 };
             }
 
             result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_SPECULAR, aiTextureType_NONE, 0, color);
             if (result == aiReturn_SUCCESS) {
                 specularColor = new float[] { color.r(), color.g(), color.b(), color.a() };
+            } else {
+                specularColor = new float[] { 0f, 0f, 0f, 1 };
             }
 
             result = aiGetMaterialColor(aiMaterial, AI_MATKEY_COLOR_EMISSIVE, aiTextureType_NONE, 0, color);
             if (result == aiReturn_SUCCESS) {
                 emissiveColor = new float[] { color.r(), color.g(), color.b(), color.a() };
+            } else {
+                emissiveColor = new float[] { 0f, 0f, 0f, 1 };
             }
 
             var reflectance = new float[1];
             aiGetMaterialFloatArray(aiMaterial, AI_MATKEY_SHININESS_STRENGTH, aiTextureType_NONE, 0, reflectance, new int[] { 1 });
 
-            var aiTexturePath = AIString.calloc(stack);
-            result = aiGetMaterialTexture(aiMaterial, aiTextureType_DIFFUSE, 0, aiTexturePath, (IntBuffer) null, null, null, null, null, null);
+            var specularPower = new float[1];
+            aiGetMaterialFloatArray(aiMaterial, AI_MATKEY_SHININESS, aiTextureType_NONE, 0, specularPower, new int[] { 1 });
+            if (specularPower[0] < 1) specularPower[0] = 1;
 
+            var aiTexturePath = AIString.calloc(stack);
+            result = aiGetMaterialTexture(aiMaterial, aiTextureType_AMBIENT, 0, aiTexturePath, (IntBuffer) null, null, null, null, null, null);
             if (result == aiReturn_SUCCESS) {
                 String texturePath = aiTexturePath.dataString();
                 if (!texturePath.isEmpty()) {
-                    if (modelDir.isEmpty()) {
-                        texture = texturePath;
-                    } else {
-                        texture = modelDir + "/" + texturePath;
-                    }
+                    ambientTexture = modelDir + texturePath;
                 }
             }
 
-            if (texture != null) return new Material.Texture(texture, textCoords, Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0], Color.rgba(emissiveColor));
-            return new Material.Fill(Color.rgba(ambientColor), Color.rgba(diffuseColor), Color.rgba(specularColor), reflectance[0], Color.rgba(emissiveColor));
+            result = aiGetMaterialTexture(aiMaterial, aiTextureType_DIFFUSE, 0, aiTexturePath, (IntBuffer) null, null, null, null, null, null);
+            if (result == aiReturn_SUCCESS) {
+                String texturePath = aiTexturePath.dataString();
+                if (!texturePath.isEmpty()) {
+                    diffuseTexture = modelDir + texturePath;
+                }
+            }
+
+            result = aiGetMaterialTexture(aiMaterial, aiTextureType_SPECULAR, 0, aiTexturePath, (IntBuffer) null, null, null, null, null, null);
+            if (result == aiReturn_SUCCESS) {
+                String texturePath = aiTexturePath.dataString();
+                if (!texturePath.isEmpty()) {
+                    specularTexture = modelDir + texturePath;
+                }
+            }
+
+            result = aiGetMaterialTexture(aiMaterial, aiTextureType_EMISSIVE, 0, aiTexturePath, (IntBuffer) null, null, null, null, null, null);
+            if (result == aiReturn_SUCCESS) {
+                String texturePath = aiTexturePath.dataString();
+                if (!texturePath.isEmpty()) {
+                    emissiveTexture = modelDir + texturePath;
+                }
+            }
+
+            return new Material.Fill(
+                    new Material.Ambient(Color.rgba(ambientColor), ambientTexture != null ? new Texture(ambientTexture, textCoords) : null),
+                    new Material.Diffuse(Color.rgba(diffuseColor), diffuseTexture != null ? new Texture(diffuseTexture, textCoords) : null),
+                    new Material.Specular(Color.rgba(specularColor), specularTexture != null ? new Texture(specularTexture, textCoords) : null, reflectance[0], specularPower[0]),
+                    new Material.Emissive(Color.rgba(emissiveColor), emissiveTexture != null ? new Texture(emissiveTexture, textCoords) : null)
+            );
         }
     }
 

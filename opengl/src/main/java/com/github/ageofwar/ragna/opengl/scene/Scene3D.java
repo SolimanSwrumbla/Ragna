@@ -37,7 +37,6 @@ public class Scene3D implements Scene {
 
     @Override
     public void render(Window window, long time) {
-        var shaderProgramSkybox = GlShaders.getShaderProgramSkybox();
         var shaderProgram3D = GlShaders.getShaderProgram3D();
 
         var aspectRatio = window.aspectRatio();
@@ -59,9 +58,6 @@ public class Scene3D implements Scene {
         }
 
         shaderProgram3D.setUniformMatrix("viewMatrix", camera.matrix(aspectRatio));
-
-        GlShaderProgram.bind(shaderProgramSkybox);
-        shaderProgramSkybox.setUniformMatrix("viewMatrix", camera.matrix(aspectRatio));
 
         var solidEntities = new ArrayList<GlEntity>();
         var transparentEntities = new ArrayList<GlEntity>();
