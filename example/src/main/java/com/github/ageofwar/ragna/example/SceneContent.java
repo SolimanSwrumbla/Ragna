@@ -44,7 +44,7 @@ public class SceneContent implements Scene3D.Content {
         this.window = window;
         movementFunction = new MovementFunction(window, new Position(0, 0, 100));
         rotationFunction = new RotationFunction(window, Rotation.ZERO, new Rotation(4, 4, 4));
-        zoomFunction = new ZoomFunction(window, (float) Math.toRadians(50), (float) Math.toRadians(10), 500000000);
+        zoomFunction = new ZoomFunction(window, (float) Math.toRadians(50), (float) Math.toRadians(5), 500000000);
         window.setKeyCallback((key, scancode, action, mods) -> {
             if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE) {
                 paused = !paused;
@@ -113,8 +113,7 @@ public class SceneContent implements Scene3D.Content {
     private Position getCameraVelocity(float nearestPlanetDistance) {
         if (nearestPlanetDistance > 25) return new Position(100, 100, 100);
         if (nearestPlanetDistance > 2.5) return new Position(10, 10, 10);
-        if (nearestPlanetDistance > 0.25) return new Position(1, 1, 1);
-        return new Position(0.05f, 0.05f, 0.05f);
+        return new Position(1, 1, 1);
     }
 
     public String windowTitle(double fps) {
