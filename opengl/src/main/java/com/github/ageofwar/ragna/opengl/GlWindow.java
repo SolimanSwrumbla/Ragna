@@ -10,8 +10,7 @@ import java.util.Objects;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL30.glClearColor;
-import static org.lwjgl.opengl.GL30.glViewport;
+import static org.lwjgl.opengl.GL30.*;
 
 public class GlWindow implements Window {
     private final Engine engine;
@@ -19,7 +18,7 @@ public class GlWindow implements Window {
     private boolean resizing;
     private Scene scene;
     private long lastRenderTime;
-    private boolean skipFrame = false;
+    private boolean skipFrame = true;
 
     private final ArrayList<Runnable> closeCallbacks = new ArrayList<>();
     private final ArrayList<KeyCallback> keyCallbacks = new ArrayList<>();
@@ -81,6 +80,8 @@ public class GlWindow implements Window {
     public void init() {
         makeContextCurrent();
         GL.createCapabilities();
+        glfwWindowHint(GLFW_SAMPLES, 8);
+        glEnable(GL_MULTISAMPLE);
         // GLUtil.setupDebugMessageCallback();
         glClearColor(0, 0, 0, 0);
         var viewport = viewportSize();
@@ -128,7 +129,7 @@ public class GlWindow implements Window {
         makeContextCurrent();
         if (scene != null) scene.render(this, time);
         if (!skipFrame) swapBuffers();
-        skipFrame = false;
+        skipFrame = true;
     }
 
     @Override
@@ -184,8 +185,13 @@ public class GlWindow implements Window {
     }
 
     @Override
-    public void skipFrame() {
-        skipFrame = true;
+    public void render() {
+        skipFrame = false;
+    }
+
+    @Override
+    public boolean shouldRender() {
+        return !skipFrame;
     }
 
     @Override

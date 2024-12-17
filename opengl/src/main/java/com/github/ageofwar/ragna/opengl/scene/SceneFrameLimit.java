@@ -35,7 +35,6 @@ public class SceneFrameLimit implements Scene {
         }
 
         if (time < nextRenderTime) {
-            window.skipFrame();
             return;
         }
 

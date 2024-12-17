@@ -10,7 +10,8 @@ public interface Window {
     boolean isKeyPressed(int key);
     CursorPosition cursorPosition();
     CursorPosition cursorPositionRelative();
-    void skipFrame();
+    void render();
+    boolean shouldRender();
     void setVSync(boolean vSync);
     void setTitle(String title);
 

@@ -16,6 +16,7 @@ public interface Engine extends Runnable, AutoCloseable {
     Window createWindow(WindowConfiguration configuration);
 
     Executor executor();
+    Executor asyncExecutor();
 
     interface Executor {
         Future<?> execute(Runnable task);

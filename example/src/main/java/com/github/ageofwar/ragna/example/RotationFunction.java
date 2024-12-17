@@ -3,22 +3,24 @@ package com.github.ageofwar.ragna.example;
 import com.github.ageofwar.ragna.Rotation;
 import com.github.ageofwar.ragna.Window;
 
-import java.util.function.Consumer;
+import java.util.function.LongFunction;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-class RotationCallback implements Window.MouseButtonCallback, Window.CursorPositionCallback {
+class RotationFunction implements LongFunction<Rotation>, Window.MouseButtonCallback, Window.CursorPositionCallback {
     private final Window window;
     private Rotation start;
     private final Rotation velocity;
     private Window.CursorPosition dragStart;
-    private final Consumer<Rotation> callback;
+    private Rotation current;
 
-    public RotationCallback(Window window, Rotation start, Rotation velocity, Consumer<Rotation> callback) {
+    public RotationFunction(Window window, Rotation start, Rotation velocity) {
         this.window = window;
         this.start = start;
         this.velocity = velocity;
-        this.callback = callback;
+        current = start;
+        window.setMouseButtonCallback(this);
+        window.setCursorPositionRelativeCallback(this);
     }
 
     private Rotation newRotation(double x, double y) {
@@ -31,9 +33,14 @@ class RotationCallback implements Window.MouseButtonCallback, Window.CursorPosit
     }
 
     @Override
+    public Rotation apply(long value) {
+        return current;
+    }
+
+    @Override
     public void invoke(double x, double y) {
         if (dragStart == null) return;
-        callback.accept(newRotation(x, y));
+        current = newRotation(x, y);
     }
 
     @Override

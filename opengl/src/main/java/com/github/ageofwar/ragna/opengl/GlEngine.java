@@ -14,6 +14,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class GlEngine implements Engine {
     private final EngineExecutorService executor;
+    private final AsyncExecutorService asyncExecutor;
     private final ArrayList<GlWindow> windows;
 
     public static GlEngine create() {
@@ -24,6 +25,11 @@ public class GlEngine implements Engine {
 
     public GlEngine() {
         executor = new EngineExecutorService();
+        asyncExecutor = new AsyncExecutorService(Executors.newScheduledThreadPool(8, r -> {
+            var thread = new Thread(r);
+            thread.setDaemon(true);
+            return thread;
+        }));
         windows = new ArrayList<>();
     }
 
@@ -77,6 +83,11 @@ public class GlEngine implements Engine {
         return executor;
     }
 
+    @Override
+    public Executor asyncExecutor() {
+        return asyncExecutor;
+    }
+
     private static class EngineExecutorService implements Executor {
         PriorityQueue<Task<?>> tasks = new PriorityQueue<>();
 
@@ -119,7 +130,7 @@ public class GlEngine implements Engine {
         }
 
         @Override
-        public <T> ScheduledFuture<T> schedule(Callable<T> task, long delay) {
+        public synchronized <T> ScheduledFuture<T> schedule(Callable<T> task, long delay) {
             var future = new Task<>(task, System.nanoTime() + delay);
             tasks.add(future);
             return future;
@@ -209,8 +220,46 @@ public class GlEngine implements Engine {
 
             @Override
             public int compareTo(Delayed o) {
-                return Long.compare(time, o.getDelay(TimeUnit.NANOSECONDS));
+                return Long.compare(time, ((Task<?>) o).time);
             }
+        }
+    }
+
+    private static class AsyncExecutorService implements Executor {
+        private final ScheduledExecutorService executor;
+
+        public AsyncExecutorService(ScheduledExecutorService executor) {
+            this.executor = executor;
+        }
+
+        @Override
+        public Future<?> execute(Runnable task) {
+            return executor.submit(task);
+        }
+
+        @Override
+        public <T> ScheduledFuture<T> execute(Callable<T> task) {
+            return executor.schedule(task, 0L, TimeUnit.NANOSECONDS);
+        }
+
+        @Override
+        public ScheduledFuture<?> schedule(Runnable task, long delay) {
+            return executor.schedule(task, delay, TimeUnit.NANOSECONDS);
+        }
+
+        @Override
+        public <T> ScheduledFuture<T> schedule(Callable<T> task, long delay) {
+            return executor.schedule(task, delay, TimeUnit.NANOSECONDS);
+        }
+
+        @Override
+        public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long delay, long period) {
+            return executor.scheduleAtFixedRate(task, delay, period, TimeUnit.NANOSECONDS);
+        }
+
+        @Override
+        public ScheduledFuture<?> scheduleAtFixedRate(LongConsumer task, long delay, long period) {
+            return executor.scheduleAtFixedRate(() -> task.accept(System.nanoTime()), delay, period, TimeUnit.NANOSECONDS);
         }
     }
 }

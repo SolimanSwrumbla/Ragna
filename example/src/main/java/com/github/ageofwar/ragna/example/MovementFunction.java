@@ -1,35 +1,24 @@
 package com.github.ageofwar.ragna.example;
 
-import com.github.ageofwar.ragna.Camera;
 import com.github.ageofwar.ragna.Direction;
 import com.github.ageofwar.ragna.Position;
+import com.github.ageofwar.ragna.Rotation;
 import com.github.ageofwar.ragna.Window;
-
-import java.util.function.Consumer;
-import java.util.function.LongConsumer;
-import java.util.function.Supplier;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class MovementCallback implements LongConsumer {
+public class MovementFunction {
     private final Window window;
     private Position start;
-    private final Supplier<Position> velocity;
-    private final Consumer<Position> callback;
-    private final Supplier<Camera> camera;
 
     private long lastTime = System.nanoTime();
 
-    public MovementCallback(Window window, Position start, Supplier<Position> velocity, Consumer<Position> callback, Supplier<Camera> camera) {
+    public MovementFunction(Window window, Position start) {
         this.window = window;
         this.start = start;
-        this.velocity = velocity;
-        this.callback = callback;
-        this.camera = camera;
     }
 
-    @Override
-    public void accept(long t) {
+    public Position apply(long t, Position velocity, Rotation rotation) {
         var elapsedTime = (t - lastTime) / 1_000_000_000.0f;
         var upPressed = window.isKeyPressed(GLFW_KEY_W);
         var downPressed = window.isKeyPressed(GLFW_KEY_S);
@@ -58,16 +47,14 @@ public class MovementCallback implements LongConsumer {
             relativeDirection = relativeDirection.add(Direction.DOWN);
         }
         if (relativeDirection != Direction.NONE) {
-            var velocity = this.velocity.get();
-            var camera = this.camera.get();
-            var direction = camera.rotation().direction(relativeDirection);
+            var direction = rotation.direction(relativeDirection);
             start = start.add(Position.fromVector(new float[] {
                     direction.x() * velocity.x() * elapsedTime,
                     direction.y() * velocity.y() * elapsedTime,
                     direction.z() * velocity.z() * elapsedTime
             }));
-            callback.accept(start);
         }
         lastTime = t;
+        return start;
     }
 }
