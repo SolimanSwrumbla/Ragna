@@ -33,6 +33,7 @@ public class SceneContent implements Scene3D.Content {
     };
     private final MovementFunction movementFunction;
     private final RotationFunction rotationFunction;
+    private final ZoomFunction zoomFunction;
     private long startSimulationTime = System.nanoTime();
     private float nearestPlanetDistance = Float.MAX_VALUE;
     private long lastTime = startSimulationTime;
@@ -43,6 +44,7 @@ public class SceneContent implements Scene3D.Content {
         this.window = window;
         movementFunction = new MovementFunction(window, new Position(0, 0, 100));
         rotationFunction = new RotationFunction(window, Rotation.ZERO, new Rotation(4, 4, 4));
+        zoomFunction = new ZoomFunction(window, (float) Math.toRadians(50), (float) Math.toRadians(10), 500000000);
         window.setKeyCallback((key, scancode, action, mods) -> {
             if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE) {
                 paused = !paused;
@@ -58,7 +60,8 @@ public class SceneContent implements Scene3D.Content {
         var rotation = rotationFunction.apply(time);
         var velocity = getCameraVelocity(nearestPlanetDistance);
         var position = movementFunction.apply(time, velocity, rotation);
-        return new Camera(position, rotation, new PerspectiveProjection((float) Math.toRadians(50), 0.001f, 174f));
+        var fov = zoomFunction.apply(time);
+        return new Camera(position, rotation, new PerspectiveProjection(fov, 0.001f, 174f));
     }
 
     @Override
