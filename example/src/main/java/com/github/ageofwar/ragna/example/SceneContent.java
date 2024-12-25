@@ -87,7 +87,8 @@ public class SceneContent implements Scene3D.Content {
                 virtualPosition = camera.position().add(camera.position().directionTo(virtualPosition), SKYBOX_SIZE);
             }
             virtualRadius = Math.max(virtualRadius, FAR_PLANET_RADIUS);
-            entities.add(new Entity(helpMode ? helpModel(planet) : planet.model(), virtualPosition, planet.rotation(t), new Scale(virtualRadius)));
+            var model = planet.model();
+            entities.add(new Entity(helpMode ? helpModel(planet) : model[0], virtualPosition, planet.rotation(t), new Scale(virtualRadius)));
         }
 
         entities.add(new Entity(skybox, camera.position(), Rotation.ZERO, new Scale(SKYBOX_SIZE)));
@@ -106,8 +107,8 @@ public class SceneContent implements Scene3D.Content {
         return nearestPlanetDistance;
     }
 
-    public Model[] helpModel(Planet planet) {
-        return new Model[] { new Model(point, new Material.Fill(new Material.Emissive(planet.color()))) };
+    public Model helpModel(Planet planet) {
+        return new Model(point, new Material.Fill(new Material.Emissive(planet.color())));
     }
 
     private Position getCameraVelocity(float nearestPlanetDistance) {
