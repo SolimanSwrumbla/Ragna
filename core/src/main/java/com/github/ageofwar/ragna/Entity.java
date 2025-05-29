@@ -1,6 +1,6 @@
 package com.github.ageofwar.ragna;
 
-public record Entity(Model[] model, Position position, Rotation rotation, Scale scale) {
+public record Entity(Model[] model, Position position, Rotation rotation, Scale scale) implements Renderable {
     public Entity(Model[] model, Position position, Rotation rotation) {
         this(model, position, rotation, Scale.ONE);
     }

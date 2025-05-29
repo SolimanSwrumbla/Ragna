@@ -31,7 +31,10 @@ public class Scene3D implements Scene {
         var ambientLights = new ArrayList<Light.Ambient>();
         var pointLights = new ArrayList<Light.Point>();
         var directionalLights = new ArrayList<Light.Directional>();
-        lights(camera, time, ambientLights, pointLights, directionalLights);
+        var solidEntities = new ArrayList<GlEntity>();
+        var transparentEntities = new ArrayList<GlEntity>();
+        entities(camera, time, solidEntities, transparentEntities, ambientLights, pointLights, directionalLights);
+
         shaderProgram3D.setUniform("ambientLightsSize", ambientLights.size());
         for (int i = 0; i < ambientLights.size(); i++) {
             shaderProgram3D.setUniform("ambientLights[" + i + "]", ambientLights.get(i));
@@ -44,10 +47,6 @@ public class Scene3D implements Scene {
         for (int i = 0; i < pointLights.size(); i++) {
             shaderProgram3D.setUniform("pointLights[" + i + "]", pointLights.get(i));
         }
-
-        var solidEntities = new ArrayList<GlEntity>();
-        var transparentEntities = new ArrayList<GlEntity>();
-        entities(camera, time, solidEntities, transparentEntities);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
@@ -70,30 +69,27 @@ public class Scene3D implements Scene {
         window.render();
     }
 
-    private void entities(Camera camera, long time, ArrayList<GlEntity> solidEntities, ArrayList<GlEntity> transparentEntities) {
-        for (var entity : content.entities(camera, time)) {
-            for (var model : entity.model()) {
-                var glModel = GlModels.get(model);
-                if (glModel.isTransparent()) {
-                    transparentEntities.add(new GlEntity(entity, glModel));
-                } else {
-                    solidEntities.add(new GlEntity(entity, glModel));
+    private void entities(Camera camera, long time, ArrayList<GlEntity> solidEntities, ArrayList<GlEntity> transparentEntities, ArrayList<Light.Ambient> ambientLights, ArrayList<Light.Point> pointLights, ArrayList<Light.Directional> directionalLights) {
+        for (var renderable : content.render(camera, time)) {
+            if (renderable instanceof Entity entity) {
+                for (var model : entity.model()) {
+                    var glModel = GlModels.get(model);
+                    if (glModel.isTransparent()) {
+                        transparentEntities.add(new GlEntity(entity, glModel));
+                    } else {
+                        solidEntities.add(new GlEntity(entity, glModel));
+                    }
+                }
+            }
+            if (renderable instanceof Light light) {
+                switch (light) {
+                    case Light.Ambient ambientLight -> ambientLights.add(ambientLight);
+                    case Light.Point pointLight -> pointLights.add(pointLight);
+                    case Light.Directional directionalLight -> directionalLights.add(directionalLight);
                 }
             }
         }
         depthSort(camera, transparentEntities);
-    }
-
-    private void lights(Camera camera, long time, ArrayList<Light.Ambient> ambientLights, ArrayList<Light.Point> pointLights, ArrayList<Light.Directional> directionalLights) {
-        for (var light : content.lights(camera, time)) {
-            if (light instanceof Light.Ambient ambientLight) {
-                ambientLights.add(ambientLight);
-            } else if (light instanceof Light.Point pointLight) {
-                pointLights.add(pointLight);
-            } else if (light instanceof Light.Directional directionalLight) {
-                directionalLights.add(directionalLight);
-            }
-        }
     }
 
     private void depthSort(Camera camera, ArrayList<GlEntity> transparentEntities) {
@@ -108,7 +104,6 @@ public class Scene3D implements Scene {
 
     public interface Content {
         Camera camera(long time);
-        Iterable<Entity> entities(Camera camera, long time);
-        Iterable<Light> lights(Camera camera, long time);
+        Iterable<? extends Renderable> render(Camera camera, long time);
     }
 }

@@ -7,16 +7,21 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 public class SceneContent implements Scene3D.Content {
     private static final Model[] skybox = ModelLoader.load("assets/skybox/model.obj");
     private static final Mesh point = ModelLoader.load("assets/point/sphere.obj")[0].mesh();
+    private static final Model ship = new Model(ModelLoader.load("assets/ship/ship.obj")[0].mesh(), new Material.Fill(
+            new Material.Ambient(Color.rgba(0.5f,1f,0.5f,0.4f)),
+            new Material.Diffuse(Color.rgba(0.5f,1f,0.5f,1f)),
+            new Material.Specular(Color.GREEN, 0.5f, 5),
+            new Material.Emissive(Color.TRANSPARENT)
+    ));
 
     private static final float SKYBOX_SIZE = 100;
-    private static final float FAR_PLANET_RADIUS = SKYBOX_SIZE / 300;
+    private static final float MIN_HELP_PLANET_RADIUS = SKYBOX_SIZE / 300;
 
     private final Window window;
     private final Planet[] planets = new Planet[] {
@@ -39,6 +44,7 @@ public class SceneContent implements Scene3D.Content {
     private long lastTime = startSimulationTime;
     private Position lastPosition = new Position(0, 0, 100);
     private boolean paused = false;
+    private boolean helpMode = false;
 
     public SceneContent(Window window) {
         this.window = window;
@@ -51,6 +57,9 @@ public class SceneContent implements Scene3D.Content {
                 if (!paused) {
                     startSimulationTime += System.nanoTime() - lastTime;
                 }
+            }
+            if (key == GLFW_KEY_H && action == GLFW_RELEASE) {
+                helpMode = !helpMode;
             }
         });
     }
@@ -65,16 +74,16 @@ public class SceneContent implements Scene3D.Content {
     }
 
     @Override
-    public Iterable<Entity> entities(Camera camera, long time) {
+    public Iterable<? extends Renderable> render(Camera camera, long time) {
+        // Reset simulation time if 'R' is pressed
         if (window.isKeyPressed(GLFW_KEY_R)) startSimulationTime = System.nanoTime();
-        if (!paused) {
-            lastTime = time;
-        }
+
+        // Update camera position and rotation
+        if (!paused) lastTime = time;
         lastPosition = camera.position();
-        nearestPlanetDistance = Float.MAX_VALUE;
-        var helpMode = window.isKeyPressed(GLFW_KEY_H);
+        nearestPlanetDistance = Float.MAX_VALUE; // We want to slow down the camera when it is close to a planet
         var t = lastTime - startSimulationTime;
-        var entities = new ArrayList<Entity>();
+        var entities = new ArrayList<Renderable>();
 
         for (var planet : planets) {
             var position = planet.position(t);
@@ -82,29 +91,38 @@ public class SceneContent implements Scene3D.Content {
             var virtualPosition = position.scale(1e-6f);
             var virtualRadius = planet.radius() * 1e-6f;
             nearestPlanetDistance = Math.min(nearestPlanetDistance, camera.position().distance(virtualPosition) - planet.radius() * 1e-6f);
+
+            // Fix for when a planet is too far and is occluded by the skybox
             if (virtualPosition.distance(camera.position()) > SKYBOX_SIZE) {
                 if (!helpMode) virtualRadius = virtualRadius * SKYBOX_SIZE / camera.position().distance(virtualPosition);
                 virtualPosition = camera.position().add(camera.position().directionTo(virtualPosition), SKYBOX_SIZE);
             }
-            virtualRadius = Math.max(virtualRadius, FAR_PLANET_RADIUS);
-            var model = planet.model();
-            entities.add(new Entity(helpMode ? helpModel(planet) : model[0], virtualPosition, planet.rotation(t), new Scale(virtualRadius)));
+
+            if (helpMode) {
+                entities.add(new Entity(helpModel(planet), virtualPosition, planet.rotation(t), new Scale(Math.max(virtualRadius, MIN_HELP_PLANET_RADIUS))));
+            } else {
+                entities.add(new Entity(planet.model(), virtualPosition, planet.rotation(t), new Scale(virtualRadius)));
+            }
+
+            if (planet == Planet.SUN) {
+                entities.add(new Light.Point(position, Color.WHITE, 1f, new Light.Attenuation(0.7f, 0.01f, 0)));
+            }
         }
 
         entities.add(new Entity(skybox, camera.position(), Rotation.ZERO, new Scale(SKYBOX_SIZE)));
+        entities.add(new Light.Ambient(Color.WHITE, 0.02f));
+
+        if (nearestPlanetDistance > 0.05f) {
+            entities.add(new Entity(ship, camera.position().add(camera.rotation().direction(Direction.FORWARD), 0.04f).add(new Position(0, -0.01f, 0)), new Rotation(-camera.rotation().roll(), (float) Math.PI + camera.rotation().pitch(), camera.rotation().yaw()), new Scale(0.001f)));
+            entities.add(new Entity(
+                    new Model(point, new Material.Fill(new Material.Emissive(Color.rgba(0.616f, 0, 1, 1)))),
+                    camera.position().add(camera.rotation().direction(Direction.FORWARD), 0.037f).add(new Position(0, -0.00976f, 0)),
+                    Rotation.ZERO,
+                    new Scale(0.0005f)
+            ));
+        }
+
         return entities;
-    }
-
-    @Override
-    public Iterable<Light> lights(Camera camera, long time) {
-        return List.of(
-            new Light.Ambient(Color.WHITE, 0.02f),
-            new Light.Point(Position.ORIGIN, Color.WHITE, 1f, new Light.Attenuation(0.7f, 0.005f, 0))
-        );
-    }
-
-    public float getNearestPlanetDistance() {
-        return nearestPlanetDistance;
     }
 
     public Model helpModel(Planet planet) {
@@ -112,9 +130,12 @@ public class SceneContent implements Scene3D.Content {
     }
 
     private Position getCameraVelocity(float nearestPlanetDistance) {
+        if (nearestPlanetDistance > 250) return new Position(1000, 1000, 1000);
         if (nearestPlanetDistance > 25) return new Position(100, 100, 100);
         if (nearestPlanetDistance > 2.5) return new Position(10, 10, 10);
-        return new Position(1, 1, 1);
+        if (nearestPlanetDistance > 0.25) return new Position(1, 1, 1);
+        if (nearestPlanetDistance > 0.025) return new Position(0.1f, 0.1f, 0.1f);
+        return new Position(0.05f, 0.05f, 0.05f);
     }
 
     public String windowTitle(double fps) {
