@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record Entity(Model[] model, Position position, Rotation rotation, Scale scale) implements Renderable {
     public Entity(Model[] model, Position position, Rotation rotation) {

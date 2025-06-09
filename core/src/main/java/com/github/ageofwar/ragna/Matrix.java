@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public final class Matrix {
     private Matrix() {

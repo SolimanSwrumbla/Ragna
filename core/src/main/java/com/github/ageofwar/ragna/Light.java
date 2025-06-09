@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public sealed interface Light extends Renderable permits Light.Ambient, Light.Point, Light.Directional {
     record Ambient(Color color, float intensity) implements Light {

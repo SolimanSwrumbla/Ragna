@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 import org.lwjgl.assimp.*;
 import org.lwjgl.system.MemoryStack;

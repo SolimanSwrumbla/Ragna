@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record Rotation(float roll, float pitch, float yaw) {
     public static final Rotation ZERO = new Rotation(0, 0, 0);

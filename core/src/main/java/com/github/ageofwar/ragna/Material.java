@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public sealed interface Material permits Material.Fill {
     record Fill(Ambient ambient, Diffuse diffuse, Specular specular, Emissive emissive) implements Material {
@@ -19,42 +19,42 @@ public sealed interface Material permits Material.Fill {
         }
     }
 
-    record Ambient(Color color, com.github.ageofwar.ragna.Texture texture) {
+    record Ambient(Color color, com.github.ageofwar.solex.Texture texture) {
         public Ambient(Color color) {
             this(color, null);
         }
 
-        public Ambient(com.github.ageofwar.ragna.Texture texture) {
+        public Ambient(com.github.ageofwar.solex.Texture texture) {
             this(Color.TRANSPARENT, texture);
         }
     }
 
-    record Diffuse(Color color, com.github.ageofwar.ragna.Texture texture) {
+    record Diffuse(Color color, com.github.ageofwar.solex.Texture texture) {
         public Diffuse(Color color) {
             this(color, null);
         }
 
-        public Diffuse(com.github.ageofwar.ragna.Texture texture) {
+        public Diffuse(com.github.ageofwar.solex.Texture texture) {
             this(Color.TRANSPARENT, texture);
         }
     }
 
-    record Specular(Color color, com.github.ageofwar.ragna.Texture texture, float reflectance, float specularPower) {
+    record Specular(Color color, com.github.ageofwar.solex.Texture texture, float reflectance, float specularPower) {
         public Specular(Color color, float reflectance, float specularPower) {
             this(color, null, reflectance, specularPower);
         }
 
-        public Specular(com.github.ageofwar.ragna.Texture texture, float reflectance, float specularPower) {
+        public Specular(com.github.ageofwar.solex.Texture texture, float reflectance, float specularPower) {
             this(Color.TRANSPARENT, texture, reflectance, specularPower);
         }
     }
 
-    record Emissive(Color color, com.github.ageofwar.ragna.Texture texture) {
+    record Emissive(Color color, com.github.ageofwar.solex.Texture texture) {
         public Emissive(Color color) {
             this(color, null);
         }
 
-        public Emissive(com.github.ageofwar.ragna.Texture texture) {
+        public Emissive(com.github.ageofwar.solex.Texture texture) {
             this(Color.TRANSPARENT, texture);
         }
     }

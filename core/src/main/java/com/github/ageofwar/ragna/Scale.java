@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record Scale(float x, float y, float z) {
     public static final Scale ZERO = new Scale(0);

@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record Position(float x, float y, float z) {
     public static final Position ORIGIN = new Position(0, 0, 0);

@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record Mesh(float[] vertices, float[] normals, int[] indices) {
     public int numVertices() {

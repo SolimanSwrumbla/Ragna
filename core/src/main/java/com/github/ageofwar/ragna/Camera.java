@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record Camera(Position position, Rotation rotation, Projection projection) {
     public Camera move(Position offset) {

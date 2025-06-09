@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record PerspectiveProjection(float fov, float near, float far) implements Projection {
     @Override

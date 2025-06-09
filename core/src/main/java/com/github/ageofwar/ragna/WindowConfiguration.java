@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record WindowConfiguration(String title, int width, int height) {
     public WindowConfiguration {

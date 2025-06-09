@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;

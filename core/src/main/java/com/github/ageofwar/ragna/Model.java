@@ -1,4 +1,4 @@
-package com.github.ageofwar.ragna;
+package com.github.ageofwar.solex;
 
 public record Model(Mesh mesh, Material material) {
     public Model withMesh(Mesh mesh) {
