@@ -46,6 +46,10 @@ public class SceneContent implements Scene3D.Content {
     private boolean paused = false;
     private boolean helpMode = false;
 
+    // --- SoundPlayer instance as field ---
+    private SoundPlayer engine = new SoundPlayer();
+    private boolean wasMoving = false;
+
     public SceneContent(Window window) {
         this.window = window;
         movementFunction = new MovementFunction(window, new Position(0, 0, 100));
@@ -81,7 +85,7 @@ public class SceneContent implements Scene3D.Content {
         // Update camera position and rotation
         if (!paused) lastTime = time;
         lastPosition = camera.position();
-        nearestPlanetDistance = Float.MAX_VALUE; // We want to slow down the camera when it is close to a planet
+        nearestPlanetDistance = Float.MAX_VALUE; // Slow down camera near planets
         var t = lastTime - startSimulationTime;
         var entities = new ArrayList<Renderable>();
 
@@ -92,7 +96,7 @@ public class SceneContent implements Scene3D.Content {
             var virtualRadius = planet.radius() * 1e-6f;
             nearestPlanetDistance = Math.min(nearestPlanetDistance, camera.position().distance(virtualPosition) - planet.radius() * 1e-6f);
 
-            // Fix for when a planet is too far and is occluded by the skybox
+            // Fix occlusion by skybox
             if (virtualPosition.distance(camera.position()) > SKYBOX_SIZE) {
                 if (!helpMode) virtualRadius = virtualRadius * SKYBOX_SIZE / camera.position().distance(virtualPosition);
                 virtualPosition = camera.position().add(camera.position().directionTo(virtualPosition), SKYBOX_SIZE);
@@ -113,14 +117,37 @@ public class SceneContent implements Scene3D.Content {
         entities.add(new Light.Ambient(Color.WHITE, 0.02f));
 
         if (nearestPlanetDistance > 0.05f) {
-            entities.add(new Entity(ship, camera.position().add(camera.rotation().direction(Direction.FORWARD), 0.04f).add(new Position(0, -0.01f, 0)), new Rotation(-camera.rotation().roll(), (float) Math.PI + camera.rotation().pitch(), camera.rotation().yaw()), new Scale(0.001f)));
             entities.add(new Entity(
-                    new Model(point, new Material.Fill(new Material.Emissive(Color.rgba(0.616f, 0, 1, 1)))),
-                    camera.position().add(camera.rotation().direction(Direction.FORWARD), 0.037f).add(new Position(0, -0.00976f, 0)),
-                    Rotation.ZERO,
-                    new Scale(0.0005f)
+                    ship,
+                    camera.position().add(camera.rotation().direction(Direction.FORWARD), 0.04f).add(new Position(0, -0.01f, 0)),
+                    new Rotation(-camera.rotation().roll(), (float) Math.PI + camera.rotation().pitch(), camera.rotation().yaw()),
+                    new Scale(0.001f)
             ));
+                
+            boolean isMoving = movementFunction.isMoving();
+                
+            if (isMoving && !wasMoving) {
+                engine.start();
+            } else if (!isMoving && wasMoving) {
+                engine.stop();
+            }
+            wasMoving = isMoving;
+        
+            if (isMoving) {
+                entities.add(new Entity(
+                        new Model(point, new Material.Fill(new Material.Emissive(Color.rgba(0.616f, 0, 1, 1)))),
+                        camera.position().add(camera.rotation().direction(Direction.FORWARD), 0.037f).add(new Position(0, -0.00990f, 0)),
+                        Rotation.ZERO,
+                        new Scale(0.0005f)
+                ));
+            }
+        } else {
+            if (wasMoving) {
+                engine.stop();
+                wasMoving = false;
+            }
         }
+
 
         return entities;
     }
